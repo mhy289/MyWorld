@@ -16,25 +16,37 @@
         title: "Hello Cloudflare Pages",
         heading: "Hello World!",
         description: "🚀 This is a static page deployed on Cloudflare Pages.",
-        language: "Language"
+        language: "Language",
+        getIP: "Get IP",
+        yourIP: "Your IP Address:",
+        loadingIP: "Loading IP address..."
       },
       zh: {
         title: "你好 Cloudflare Pages",
         heading: "你好，世界！",
         description: "🚀 这是一个部署在Cloudflare Pages上的静态页面。",
-        language: "语言"
+        language: "语言",
+        getIP: "获取IP",
+        yourIP: "你的IP地址：",
+        loadingIP: "正在加载IP地址..."
       },
       fr:{
         title: "Bonjour Cloudflare Pages",
         heading: "Bonjour le monde!",
         description: "🚀 C'est une page statique déployée sur Cloudflare Pages.",
-        language: "Langue"
+        language: "Langue",
+        getIP: "Obtenir l'IP",
+        yourIP: "Votre adresse IP :",
+        loadingIP: "Chargement de l'adresse IP..."
       },
       es:{
         title: "Hola Cloudflare Pages",
         heading: "Hola mundo!",
         description: "🚀 Esta es una página estática implementada en Cloudflare Pages.",
-        language: "Idioma"
+        language: "Idioma",
+        getIP: "Obtener IP",
+        yourIP: "Tu dirección IP:",
+        loadingIP: "Cargando dirección IP..."
       }
     };
 
@@ -47,13 +59,49 @@
       document.getElementById('heading').textContent = translations[lang].heading;
       document.getElementById('description').textContent = translations[lang].description;
       document.getElementById('language-label').textContent = translations[lang].language;
+      document.getElementById('get-ip-btn').textContent = translations[lang].getIP;
       document.title = translations[lang].title;
+      
+      // 更新已显示的IP标签（如果存在）
+      const ipLabel = document.getElementById('ip-label');
+      if (ipLabel) {
+        ipLabel.textContent = translations[lang].yourIP;
+      }
       
       // 设置HTML语言属性
       document.documentElement.lang = lang;
       
       // 保存用户选择到本地存储
       localStorage.setItem('preferredLanguage', lang);
+    }
+
+    // 获取并显示IP地址
+    function getIP(){
+        // 显示加载状态
+        const ipContainer = document.getElementById('ip-container');
+        const currentLang = document.documentElement.lang || 'en';
+        ipContainer.innerHTML = `<span id="ip-label" class="font-medium">${translations[currentLang].yourIP}</span> 
+                                <span>${translations[currentLang].loadingIP}</span>`;
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://api.ipify.org?format=json", true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        // 显示IP地址
+                        ipContainer.innerHTML = `<span id="ip-label" class="font-medium">${translations[currentLang].yourIP}</span> 
+                                                <span class="text-blue-600 font-mono">${response.ip}</span>`;
+                    } catch (e) {
+                        ipContainer.textContent = "Error parsing IP data";
+                    }
+                } else {
+                    ipContainer.textContent = "Failed to get IP address";
+                }
+            }
+        };
+        xhr.send();
     }
 
     // 页面加载时初始化语言
@@ -83,9 +131,6 @@
       <option value="zh">中文</option>
       <option value="fr">Français</option>
       <option value="es">Español</option>
-      <!-- 未来可在此添加更多语言选项 -->
-      <!-- <option value="es">Español</option> -->
-      <!-- <option value="fr">Français</option> -->
     </select>
   </div>
 
@@ -93,8 +138,15 @@
     <h1 id="heading" class="text-4xl font-bold text-gray-900 mb-6 transition-all duration-300">Hello World!</h1>
     <p id="description" class="text-xl text-gray-700 mb-8">🚀 This is a static page deployed on Cloudflare Pages.</p>
     
+    <button id="get-ip-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4 transition-all duration-200 transform hover:scale-105" onclick="getIP()">
+      Get IP
+    </button>
+    
+    <!-- IP地址显示区域 -->
+    <div id="ip-container" class="my-4 text-lg text-gray-700 min-h-[24px]"></div>
+    
     <!-- 装饰元素 -->
-    <div class="flex justify-center">
+    <div class="flex justify-center mt-8">
       <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
         <i class="fa fa-cloud text-4xl text-blue-500"></i>
       </div>
@@ -102,18 +154,4 @@
   </div>
 </body>
 </html>
-
-
-<script>
-    function getIP(){
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "https://api.ipify.org?format=json", true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                console.log(response.ip);
-            }
-        };
-        xhr.send();
-    }
-</script>
+    
