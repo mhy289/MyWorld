@@ -16,6 +16,10 @@ import { HomeFilled } from '@element-plus/icons-vue';
 </script>
 
 <style scoped>
+:root {
+  --header-height: 60px;
+}
+
 .app-container {
   position: relative;
   height: 100vh;
@@ -43,7 +47,7 @@ import { HomeFilled } from '@element-plus/icons-vue';
 
 .router-view {
   width: 100%;
-  height: calc(100vh - 60px);
-  margin-top: 60px;
+  height: calc(100vh - var(--header-height));
+  margin-top: var(--header-height);
 }
 </style>
