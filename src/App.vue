@@ -1,7 +1,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
-import Cloud from '@element-plus/icons-vue/es/Cloud';
+import { Cloud } from '@element-plus/icons-vue';
 import { ElIcon } from 'element-plus';
 
 // 多语言配置
@@ -149,7 +149,7 @@ onMounted(() => {
       <!-- 装饰元素 -->
       <div class="flex justify-center mt-10">
         <el-icon :size="60" color="#3b82f6" :opacity="0.8">
-          <component :is="Cloud" />
+          <Cloud />
         </el-icon>
       </div>
     </div>
