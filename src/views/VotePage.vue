@@ -10,42 +10,68 @@
         {{ option }}
       </button>
     </div>
-    <div class="chart-container">
-      <div 
-        v-for="(count, option) in voteCounts" 
-        :key="option" 
-        class="bar"
-        :style="{ height: count * 10 + 'px' }"
-      >
-        {{ count }}
-      </div>
-    </div>
+    <div class="chart-container" ref="chartContainer"></div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import * as echarts from 'echarts';
 
 export default {
   data() {
     return {
       options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      voteCounts: {}
+      voteCounts: {},
+      chart: null
     };
   },
-  created() {
+  mounted() {
+    this.initChart();
     this.options.forEach(option => {
       this.voteCounts[option] = 0;
     });
     this.fetchVotes();
   },
   methods: {
+    initChart() {
+      this.chart = echarts.init(this.$refs.chartContainer);
+      this.updateChart();
+    },
+    updateChart() {
+      const option = {
+        tooltip: {},
+        xAxis: {
+          type: 'category',
+          data: this.options,
+          axisLabel: {
+            color: '#333'
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: {
+            color: '#333'
+          }
+        },
+        series: [{
+          data: this.options.map(option => this.voteCounts[option]),
+          type: 'bar',
+          itemStyle: {
+            color: '#409EFF'
+          },
+          barWidth: '40%'
+        }]
+      };
+      this.chart.setOption(option);
+    },
     async vote(option) {
       try {
         console.log('发送投票请求:', { option });
         const response = await axios.post('/api/vote', { option });
         console.log('投票响应:', response.data);
         this.voteCounts[option]++;
+        this.updateChart();
         this.$router.push('/result'); // 跳转到结果页
       } catch (error) {
         console.error('投票失败:', error.response?.data || error.message);
@@ -84,21 +110,10 @@ export default {
   cursor: pointer;
 }
 .chart-container {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 300px;
-  padding: 20px 0;
-}
-.bar {
-  flex: 1;
-  background-color: #67c23a;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  padding-bottom: 5px;
-  color: white;
-  min-width: 30px;
-  transition: height 0.3s;
+  width: 100%;
+  height: 400px;
+  margin-top: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 </style>
