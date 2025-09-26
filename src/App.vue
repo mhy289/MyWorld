@@ -1,6 +1,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
+import { Cloud } from '@element-plus/icons-vue';
 
 // 多语言配置
 const translations = {
@@ -45,6 +46,14 @@ const translations = {
     errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo."
   }
 };
+
+// 语言选项
+const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: '中文' },
+  { value: 'fr', label: 'Français' },
+  { value: 'es', label: 'Español' }
+];
 
 // 响应式状态
 const lang = ref(localStorage.getItem('preferredLanguage') || 'en');
@@ -93,19 +102,20 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex flex-col items-center justify-center p-4">
     <!-- 语言选择器 -->
-    <div class="absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-md z-10">
-      <label for="language-select" class="mr-2 text-gray-700 font-medium">{{ t.language }}</label>
-      <select
-        id="language-select"
+    <div class="absolute top-4 right-4">
+      <el-select
         v-model="lang"
         @change="setLanguage(lang)"
-        class="border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        placeholder="选择语言"
+        class="w-40"
       >
-        <option value="en">English</option>
-        <option value="zh">中文</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-      </select>
+        <el-option
+          v-for="item in languageOptions"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
     </div>
 
     <div class="text-center max-w-md mx-auto px-4">
@@ -116,33 +126,30 @@ onMounted(() => {
         {{ t.description }}
       </p>
 
-      <button
-        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg mb-6 transition-all duration-200 hover:shadow-lg active:scale-95 flex items-center justify-center gap-2 mx-auto"
+      <el-button
+        type="primary"
         @click="getIP"
-        :disabled="loading"
+        :loading="loading"
+        class="w-40"
       >
-        <span v-if="!loading">{{ t.getIP }}</span>
-        <svg v-else class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-      </button>
+        {{ t.getIP }}
+      </el-button>
 
       <!-- IP地址显示区域 -->
-      <div v-if="showIP" class="my-4 p-4 bg-white/50 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200">
+      <el-card v-if="showIP" class="my-4 w-80 mx-auto">
         <p class="text-lg font-medium text-gray-700 mb-1">{{ t.yourIP }}</p>
         <div class="min-h-8 flex items-center justify-center">
           <span v-if="loading" class="text-gray-500">{{ t.loadingIP }}</span>
           <span v-else-if="error" class="text-red-500 font-medium">{{ ip }}</span>
           <span v-else class="text-blue-600 font-mono text-xl">{{ ip }}</span>
         </div>
-      </div>
+      </el-card>
 
       <!-- 装饰元素 -->
       <div class="flex justify-center mt-10">
-        <div class="w-24 h-24 rounded-full bg-blue-100/50 flex items-center justify-center shadow-inner">
-          <i class="fa fa-cloud text-4xl text-blue-500 opacity-80"></i>
-        </div>
+        <el-icon :size="60" color="#3b82f6" :opacity="0.8">
+          <Cloud />
+        </el-icon>
       </div>
     </div>
   </div>
