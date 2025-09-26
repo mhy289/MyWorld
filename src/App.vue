@@ -1,7 +1,8 @@
 <template>
   <div class="app-container">
     <router-link to="/" class="home-link">
-      首页
+      <el-icon><HomeFilled /></el-icon>
+      <span>首页</span>
     </router-link>
     <router-link to="/vote" class="vote-link">
       投票页面
@@ -11,7 +12,7 @@
 </template>
 
 <script setup>
-// 无需其他逻辑，仅作为容器
+import { HomeFilled } from '@element-plus/icons-vue';
 </script>
 
 <style scoped>
@@ -29,7 +30,11 @@
 }
 
 .home-link {
-  left: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .vote-link {
@@ -38,6 +43,7 @@
 
 .router-view {
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 60px);
+  margin-top: 60px;
 }
 </style>
