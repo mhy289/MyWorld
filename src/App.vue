@@ -24,6 +24,9 @@ import { HomeFilled } from '@element-plus/icons-vue';
   position: relative;
   height: 100vh;
   width: 100vw;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 .home-link,
@@ -48,6 +51,8 @@ import { HomeFilled } from '@element-plus/icons-vue';
 .router-view {
   width: 100%;
   height: calc(100vh - var(--header-height));
+  margin-top: calc(var(--header-height) + 20px);
+  margin-top: var(--header-height);
   margin-top: var(--header-height);
 }
 </style>
