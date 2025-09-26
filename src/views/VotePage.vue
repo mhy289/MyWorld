@@ -74,7 +74,8 @@ export default {
         this.voteCounts[option]++;
         this.updateChart();
         ElMessage.success('投票成功！');
-        this.$router.push('/result'); // 跳转到结果页
+        //刷新页面
+        window.location.reload();
       } catch (error) {
         console.error('投票失败:', error.response?.data || error.message);
         ElMessage.error('投票失败，请重试！');
