@@ -1,13 +1,31 @@
 <template>
   <div class="home-container">
     <el-card>
+      <div class="flex justify-between mb-4">
+        <el-select v-model="language" class="w-32">
+          <el-option label="English" value="en" />
+          <el-option label="中文" value="zh" />
+          <el-option label="Français" value="fr" />
+          <el-option label="Español" value="es" />
+          <el-option label="Português" value="pt" />
+          <el-option label="Русский" value="ru" />
+          <el-option label="العربية" value="ar" />
+        </el-select>
+        <el-button @click="getIP" :loading="loading">
+          {{ t.getIP }}
+        </el-button>
+      </div>
+
       <div v-if="loading" class="text-gray-500 font-mono text-xl">
         {{ t.loadingIP }}
       </div>
       <div v-else-if="error" class="text-red-500 font-mono text-xl">
         {{ t.errorIP }}
       </div>
-      <span v-else class="text-blue-600 font-mono text-xl">{{ ip }}</span>
+      <div v-else>
+        <p class="text-gray-600 font-mono">{{ t.yourIP }}</p>
+        <span class="text-blue-600 font-mono text-xl">{{ ip }}</span>
+      </div>
     </el-card>
 
     <!-- 装饰元素 -->
@@ -23,7 +41,7 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
 const { Cloud } = Icons;
-import { ElIcon } from 'element-plus';
+import { ElIcon, ElButton, ElSelect, ElOption } from 'element-plus';
 
 // 多语言配置
 const translations = {
@@ -46,6 +64,56 @@ const translations = {
     yourIP: "你的 IP 地址：",
     loadingIP: "正在加载 IP 地址...",
     errorIP: "获取 IP 失败，请重试。"
+  },
+  fr: {
+    title: "Bonjour Cloudflare Pages",
+    heading: "Bonjour le monde !",
+    description: "🚀 Ceci est une page statique déployée sur Cloudflare Pages.",
+    language: "Langue",
+    getIP: "Obtenir l'IP",
+    yourIP: "Votre adresse IP :",
+    loadingIP: "Chargement de l'adresse IP...",
+    errorIP: "Échec de la récupération de l'IP. Veuillez réessayer."
+  },
+  es: {
+    title: "Hola Cloudflare Pages",
+    heading: "¡Hola Mundo!",
+    description: "🚀 Esta es una página estática desplegada en Cloudflare Pages.",
+    language: "Idioma",
+    getIP: "Obtener IP",
+    yourIP: "Tu dirección IP:",
+    loadingIP: "Cargando dirección IP...",
+    errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo."
+  },
+  pt: {
+    title: "Olá Cloudflare Pages",
+    heading: "Olá Mundo!",
+    description: "🚀 Esta é uma página estática implantada no Cloudflare Pages.",
+    language: "Idioma",
+    getIP: "Obter IP",
+    yourIP: "Seu endereço IP:",
+    loadingIP: "Carregando endereço IP...",
+    errorIP: "Falha ao obter o IP. Por favor, tente novamente."
+  },
+  ru: {
+    title: "Привет, Cloudflare Pages",
+    heading: "Привет, мир!",
+    description: "🚀 Это статическая страница, размещённая на Cloudflare Pages.",
+    language: "Язык",
+    getIP: "Получить IP",
+    yourIP: "Ваш IP-адрес:",
+    loadingIP: "Загрузка IP-адреса...",
+    errorIP: "Не удалось получить IP. Пожалуйста, попробуйте снова."
+  },
+  ar: {
+    title: "مرحبًا Cloudflare Pages",
+    heading: "مرحبًا بالعالم!",
+    description: "🚀 هذه صفحة ثابتة تم نشرها على Cloudflare Pages.",
+    language: "اللغة",
+    getIP: "الحصول على IP",
+    yourIP: "عنوان IP الخاص بك:",
+    loadingIP: "جاري تحميل عنوان IP...",
+    errorIP: "فشل في جلب عنوان IP. يرجى المحاولة مرة أخرى."
   }
 };
 
