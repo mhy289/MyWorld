@@ -17,6 +17,7 @@
 <script>
 import axios from 'axios';
 import * as echarts from 'echarts';
+import { ElMessage } from 'element-ui';
 
 export default {
   data() {
@@ -72,9 +73,11 @@ export default {
         console.log('投票响应:', response.data);
         this.voteCounts[option]++;
         this.updateChart();
+        ElMessage.success('投票成功！');
         this.$router.push('/result'); // 跳转到结果页
       } catch (error) {
         console.error('投票失败:', error.response?.data || error.message);
+        ElMessage.error('投票失败，请重试！');
       }
     },
     async fetchVotes() {
