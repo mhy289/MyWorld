@@ -102,11 +102,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <router-link to="/vote" class="vote-link">
-    投票页面
-  </router-link>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex flex-col items-center justify-center p-4">
-    <!-- 语言选择器 -->
+  <div class="app-container">
+    <router-link to="/vote" class="vote-link">
+      投票页面
+    </router-link>
+    <router-view />
+  </div>
     <div class="absolute top-4 right-4">
       <el-select
         v-model="lang"
@@ -157,7 +158,6 @@ onMounted(() => {
         </el-icon>
       </div>
     </div>
-  </div>
 </template>
 
 

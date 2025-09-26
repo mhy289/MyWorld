@@ -42,10 +42,13 @@ export default {
   methods: {
     async vote(option) {
       try {
-        await axios.post('/api/vote', { option });
+        console.log('发送投票请求:', { option });
+        const response = await axios.post('/api/vote', { option });
+        console.log('投票响应:', response.data);
         this.voteCounts[option]++;
+        this.$router.push('/result'); // 跳转到结果页
       } catch (error) {
-        console.error('投票失败:', error);
+        console.error('投票失败:', error.response?.data || error.message);
       }
     },
     async fetchVotes() {
