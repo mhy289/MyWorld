@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 加载 Font Awesome */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* 自定义全局样式 */
+body {
+  @apply antialiased text-gray-800;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* 按钮动画 */
+.btn {
+  @apply transition-all duration-200 active:scale-95;
+}
+
+/* 卡片效果 */
+.card {
+  @apply bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200;
+}
