@@ -17,7 +17,7 @@
 <script>
 import axios from 'axios';
 import * as echarts from 'echarts';
-import { ElMessage } from 'element-ui';
+import { ElMessage } from 'element-plus';
 
 export default {
   data() {
