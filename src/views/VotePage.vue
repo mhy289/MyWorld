@@ -69,7 +69,7 @@ export default {
     async vote(option) {
       try {
         console.log('发送投票请求:', { option });
-        const response = await axios.post('/vote', { option });
+        const response = await this.$http.post('/vote', { option });
         console.log('投票响应:', response.data);
         this.voteCounts[option]++;
         this.updateChart();
@@ -84,7 +84,7 @@ export default {
     async fetchVotes() {
       try {
         console.log('获取投票数据...');
-        const response = await axios.get('/votes');
+        const response = await this.$http.get('/votes');
         this.voteCounts = response.data;
       } catch (error) {
         console.error('获取投票数据失败:', error);
