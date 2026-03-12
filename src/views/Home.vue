@@ -40,11 +40,8 @@
       <h3 class="text-gray-800 text-lg mb-4">关于项目</h3>
       <p class="text-gray-600 mb-4">{{ t.description }}</p>
       <div class="links">
-        <a href="https://github.com" target="_blank" class="text-blue-600 hover:text-blue-800 mr-4">
-          GitHub
-        </a>
-        <a href="https://cloudflare.com" target="_blank" class="text-blue-600 hover:text-blue-800">
-          Cloudflare
+        <a href="https://space.bilibili.com/165392864" target="_blank" class="text-blue-600 hover:text-blue-800 mr-4">
+          {{ t.link}}
         </a>
       </div>
     </div>
@@ -67,7 +64,8 @@ const translations = {
     getIP: "Get IP",
     yourIP: "Your IP Address:",
     loadingIP: "Loading IP address...",
-    errorIP: "Failed to fetch IP. Please try again."
+    errorIP: "Failed to fetch IP. Please try again.",
+    link: "Follow the streamer Thank You Meow"
   },
   zh: {
     title: "你好，Cloudflare Pages",
@@ -77,7 +75,8 @@ const translations = {
     getIP: "获取 IP",
     yourIP: "你的 IP 地址：",
     loadingIP: "正在加载 IP 地址...",
-    errorIP: "获取 IP 失败，请重试。"
+    errorIP: "获取 IP 失败，请重试。",
+    link: "关注主播谢谢喵"
   },
   fr: {
     title: "Bonjour Cloudflare Pages",
@@ -87,7 +86,8 @@ const translations = {
     getIP: "Obtenir l'IP",
     yourIP: "Votre adresse IP :",
     loadingIP: "Chargement de l'adresse IP...",
-    errorIP: "Échec de la récupération de l'IP. Veuillez réessayer."
+    errorIP: "Échec de la récupération de l'IP. Veuillez réessayer.",
+    link: "Suivez le streamer Merci Miaou"
   },
   es: {
     title: "Hola Cloudflare Pages",
@@ -97,7 +97,8 @@ const translations = {
     getIP: "Obtener IP",
     yourIP: "Tu dirección IP:",
     loadingIP: "Cargando dirección IP...",
-    errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo."
+    errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo.",
+    link: "Sigue al streamer Gracias Miau"
   },
   pt: {
     title: "Olá Cloudflare Pages",
@@ -107,7 +108,8 @@ const translations = {
     getIP: "Obter IP",
     yourIP: "Seu endereço IP:",
     loadingIP: "Carregando endereço IP...",
-    errorIP: "Falha ao obter o IP. Por favor, tente novamente."
+    errorIP: "Falha ao obter o IP. Por favor, tente novamente.",
+    link: "Siga o streamer Obrigado Miau"
   },
   ru: {
     title: "Привет, Cloudflare Pages",
@@ -117,7 +119,8 @@ const translations = {
     getIP: "Получить IP",
     yourIP: "Ваш IP-адрес:",
     loadingIP: "Загрузка IP-адреса...",
-    errorIP: "Не удалось получить IP. Пожалуйста, попробуйте снова."
+    errorIP: "Не удалось получить IP. Пожалуйста, попробуйте снова.",
+    link: "Следите за стримером Спасибо Мяу"
   },
   ar: {
     title: "مرحبًا Cloudflare Pages",
@@ -127,7 +130,8 @@ const translations = {
     getIP: "الحصول على IP",
     yourIP: "عنوان IP الخاص بك:",
     loadingIP: "جاري تحميل عنوان IP...",
-    errorIP: "فشل في جلب عنوان IP. يرجى المحاولة مرة أخرى."
+    errorIP: "فشل في جلب عنوان IP. يرجى المحاولة مرة أخرى.",
+    link: "تابع الستريمر شكراً مياو"
   }
 };
 
