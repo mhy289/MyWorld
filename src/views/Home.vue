@@ -34,6 +34,20 @@
         <component :is="Cloud" />
       </el-icon>
     </div>
+
+    <!-- 添加的文本和超链接 -->
+    <div class="additional-content mt-8">
+      <h3 class="text-gray-800 text-lg mb-4">关于项目</h3>
+      <p class="text-gray-600 mb-4">{{ t.description }}</p>
+      <div class="links">
+        <a href="https://github.com" target="_blank" class="text-blue-600 hover:text-blue-800 mr-4">
+          GitHub
+        </a>
+        <a href="https://cloudflare.com" target="_blank" class="text-blue-600 hover:text-blue-800">
+          Cloudflare
+        </a>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -146,5 +160,22 @@ const t = computed(() => translations[language.value]);
 <style scoped>
 .home-container {
   padding: 20px;
+}
+
+.additional-content {
+  background-color: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.links {
+  display: flex;
+  gap: 12px;
+}
+
+.links a {
+  text-decoration: none;
+  transition: color 0.3s;
 }
 </style>
