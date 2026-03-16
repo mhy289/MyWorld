@@ -538,8 +538,10 @@ const fetchUserVideos = async (retryCount = 99) => {
       const isNonRetryableError = 
         err.message?.includes('HTTP 404') ||
         err.message?.includes('HTTP 403') ||
+        err.message?.includes('HTTP 412') ||
         err.message?.includes('接口不存在') ||
-        err.message?.includes('访问被拒绝');
+        err.message?.includes('访问被拒绝') ||
+        err.message?.includes('request was banned');
       
       if (isNonRetryableError) {
         // 不可重试的错误，立即返回
@@ -548,6 +550,8 @@ const fetchUserVideos = async (retryCount = 99) => {
           errorMessage = t.value.apiNotFound || '后端API接口不存在，请检查server.js是否正确运行';
         } else if (err.message?.includes('HTTP 403')) {
           errorMessage = t.value.accessDenied || '访问被拒绝，可能是B站反爬虫限制';
+        } else if (err.message?.includes('HTTP 412') || err.message?.includes('request was banned')) {
+          errorMessage = t.value.accessDenied || '请求已被限制，请稍后再试';
         }
         
         videoError.value = errorMessage;
