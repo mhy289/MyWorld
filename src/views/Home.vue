@@ -242,12 +242,10 @@ const fetchUserVideos = async () => {
   videoError.value = '';
   
   try {
-    // 使用代理服务器调用B站API获取用户视频列表
-    const response = await axios.get(`/api/x/space/arc/search`, {
+    // 使用后端服务器代理调用B站API获取用户视频列表
+    const response = await axios.get(`http://localhost:8080/api/bilibili/user/videos`, {
       params: {
-        mid: userId,
-        ps: 30, // 每页数量
-        pn: 1   // 页码
+        mid: userId
       },
       timeout: 10000
     });
