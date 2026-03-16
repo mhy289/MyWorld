@@ -39,10 +39,26 @@
     <div class="additional-content mt-8">
       <h3 class="text-gray-800 text-lg mb-4">关于项目</h3>
       <p class="text-gray-600 mb-4">{{ t.description }}</p>
-      <div class="links">
+      <div class="links mb-6">
         <a href="https://space.bilibili.com/165392864" target="_blank" class="text-blue-600 hover:text-blue-800 mr-4">
           {{ t.link}}
         </a>
+      </div>
+      
+      <!-- 视频内嵌区域 -->
+      <div class="video-container">
+        <h4 class="text-gray-700 text-md mb-3">{{ t.videoTitle }}</h4>
+        <div class="video-wrapper">
+          <iframe
+            src="https://player.bilibili.com/player.html?bvid=BV1xx411c7XD&page=1&high_quality=1&danmaku=0"
+            scrolling="no"
+            border="0"
+            frameborder="no"
+            framespacing="0"
+            allowfullscreen="true"
+            class="bilibili-player"
+          ></iframe>
+        </div>
       </div>
     </div>
   </div>
@@ -65,7 +81,8 @@ const translations = {
     yourIP: "Your IP Address:",
     loadingIP: "Loading IP address...",
     errorIP: "Failed to fetch IP. Please try again.",
-    link: "Follow the streamer Thank You Meow"
+    link: "Follow the streamer Thank You Meow",
+    videoTitle: "Latest Video"
   },
   zh: {
     title: "你好，Cloudflare Pages",
@@ -76,7 +93,8 @@ const translations = {
     yourIP: "你的 IP 地址：",
     loadingIP: "正在加载 IP 地址...",
     errorIP: "获取 IP 失败，请重试。",
-    link: "关注主播谢谢喵"
+    link: "关注主播谢谢喵",
+    videoTitle: "最新视频"
   },
   fr: {
     title: "Bonjour Cloudflare Pages",
@@ -87,7 +105,8 @@ const translations = {
     yourIP: "Votre adresse IP :",
     loadingIP: "Chargement de l'adresse IP...",
     errorIP: "Échec de la récupération de l'IP. Veuillez réessayer.",
-    link: "Suivez le streamer Merci Miaou"
+    link: "Suivez le streamer Merci Miaou",
+    videoTitle: "Dernière Vidéo"
   },
   es: {
     title: "Hola Cloudflare Pages",
@@ -98,7 +117,8 @@ const translations = {
     yourIP: "Tu dirección IP:",
     loadingIP: "Cargando dirección IP...",
     errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo.",
-    link: "Sigue al streamer Gracias Miau"
+    link: "Sigue al streamer Gracias Miau",
+    videoTitle: "Último Video"
   },
   pt: {
     title: "Olá Cloudflare Pages",
@@ -109,7 +129,8 @@ const translations = {
     yourIP: "Seu endereço IP:",
     loadingIP: "Carregando endereço IP...",
     errorIP: "Falha ao obter o IP. Por favor, tente novamente.",
-    link: "Siga o streamer Obrigado Miau"
+    link: "Siga o streamer Obrigado Miau",
+    videoTitle: "Último Vídeo"
   },
   ru: {
     title: "Привет, Cloudflare Pages",
@@ -120,7 +141,8 @@ const translations = {
     yourIP: "Ваш IP-адрес:",
     loadingIP: "Загрузка IP-адреса...",
     errorIP: "Не удалось получить IP. Пожалуйста, попробуйте снова.",
-    link: "Следите за стримером Спасибо Мяу"
+    link: "Следите за стримером Спасибо Мяу",
+    videoTitle: "Последнее Видео"
   },
   ar: {
     title: "مرحبًا Cloudflare Pages",
@@ -131,7 +153,8 @@ const translations = {
     yourIP: "عنوان IP الخاص بك:",
     loadingIP: "جاري تحميل عنوان IP...",
     errorIP: "فشل في جلب عنوان IP. يرجى المحاولة مرة أخرى.",
-    link: "تابع الستريمر شكراً مياو"
+    link: "تابع الستريمر شكراً مياو",
+    videoTitle: "أحدث فيديو"
   }
 };
 
@@ -181,5 +204,25 @@ const t = computed(() => translations[language.value]);
 .links a {
   text-decoration: none;
   transition: color 0.3s;
+}
+
+.video-container {
+  margin-top: 16px;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.bilibili-player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: block;
 }
 </style>
