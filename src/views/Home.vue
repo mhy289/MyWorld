@@ -446,7 +446,7 @@ const fetchUserVideos = async (retryCount = 99) => {
     try {
       console.log(`尝试获取视频 (第${attempt}/${retryCount}次)`);
       loadingMessage.value = attempt > 1 
-        ? `${t.value.retrying || '正在重试...'} (${attempt}/${retryCount})`
+        ? `${t.value.retrying || '正在重试...'} (${attempt}/${retryCount}) - 等待风控解除`
         : (t.value.connectingServer || '正在连接服务器...');
       
       // 根据当前重试次数更新进度
@@ -492,9 +492,9 @@ const fetchUserVideos = async (retryCount = 99) => {
       loadingProgress.value = 100;
 
       // 检查B站API返回的错误码
-      if (response.data.code === -799) {
-        // 请求过于频繁，可以重试
-        throw new Error('请求过于频繁，请稍后再试');
+      if (response.data.code === -799 || response.data.code === -352) {
+        // 请求过于频繁或风控，可以重试
+        throw new Error(`B站风控限制 (错误码: ${response.data.code})`);
       }
 
       if (response.data.code === 0 && response.data.data?.list?.vlist?.length > 0) {
