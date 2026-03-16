@@ -148,7 +148,10 @@ const translations = {
     checkingServer: "Checking server connection...",
     apiNotFound: "Backend API endpoint not found, please check if server.js is running correctly",
     autoRetryMessage: "Automatically retrying, please wait...",
-    connectionError: "Connection failed"
+    connectionError: "Connection failed",
+    rateLimitError: "Too many requests, retrying in...",
+    autoRetryComplete: "All retry attempts completed. Please try again later.",
+    seconds: "seconds"
   },
   zh: {
     title: "你好，Cloudflare Pages",
@@ -182,7 +185,10 @@ const translations = {
     checkingServer: "正在检查服务器连接...",
     apiNotFound: "后端API接口不存在，请检查server.js是否正确运行",
     autoRetryMessage: "正在自动重试，请稍候...",
-    connectionError: "连接失败"
+    connectionError: "连接失败",
+    rateLimitError: "请求过于频繁，稍后重试...",
+    autoRetryComplete: "所有重试尝试已完成，请稍后再试。",
+    seconds: "秒"
   },
   fr: {
     title: "Bonjour Cloudflare Pages",
@@ -213,7 +219,14 @@ const translations = {
     accessDenied: "Accès refusé, probablement d'un blocage anti-scraping",
     userNotFound: "Utilisateur introuvable ou banni",
     serverNotRunning: "Le serveur de l'arrière-plan n'est pas en cours d'exécution, veuillez démarrer server.js",
-    timeout: "Délai d'attente dépassé, veuillez vérifier votre connexion réseau"
+    timeout: "Délai d'attente dépassé, veuillez vérifier votre connexion réseau",
+    checkingServer: "Vérification de la connexion au serveur...",
+    apiNotFound: "L'endpoint de l'API backend est introuvable, veuillez vérifier que server.js est correctement exécuté",
+    autoRetryMessage: "Réessai automatique, veuillez patienter...",
+    connectionError: "Échec de la connexion",
+    rateLimitError: "Trop de requêtes, réessai dans...",
+    autoRetryComplete: "Toutes les tentatives de réessai sont terminées. Veuillez réessayer plus tard.",
+    seconds: "secondes"
   },
   es: {
     title: "Hola Cloudflare Pages",
@@ -244,7 +257,14 @@ const translations = {
     accessDenied: "Acceso denegado, posiblemente debido a restricciones anti-scraping",
     userNotFound: "Usuario no encontrado o ha sido baneado",
     serverNotRunning: "El servidor backend no está en funcionamiento, por favor inicia server.js",
-    timeout: "Tiempo de espera agotado, por favor verifica tu conexión de red"
+    timeout: "Tiempo de espera agotado, por favor verifica tu conexión de red",
+    checkingServer: "Verificando la conexión al servidor...",
+    apiNotFound: "El endpoint de la API backend no se encontró, por favor verifica si server.js se está ejecutando correctamente",
+    autoRetryMessage: "Reintentando automáticamente, por favor espera...",
+    connectionError: "Error de conexión",
+    rateLimitError: "Demasiadas solicitudes, reintentando en...",
+    autoRetryComplete: "Todos los intentos de reintento completados. Por favor intenta más tarde.",
+    seconds: "segundos"
   },
   pt: {
     title: "Olá Cloudflare Pages",
@@ -275,7 +295,14 @@ const translations = {
     accessDenied: "Acesso negado, possivelmente devido a restrições anti-scraping",
     userNotFound: "Usuário não encontrado ou foi banido",
     serverNotRunning: "O servidor backend não está em execução, por favor inicie o server.js",
-    timeout: "Tempo de solicitação esgotado, por favor verifique sua conexão de rede"
+    timeout: "Tempo de solicitação esgotado, por favor verifique sua conexão de rede",
+    checkingServer: "Verificando a conexão do servidor...",
+    apiNotFound: "O endpoint da API backend não foi encontrado, por favor verifique se o server.js está sendo executado corretamente",
+    autoRetryMessage: "Repetindo automaticamente, por favor aguarde...",
+    connectionError: "Falha na conexão",
+    rateLimitError: "Muitas solicitações, repetindo em...",
+    autoRetryComplete: "Todas as tentativas de repetição concluídas. Por favor, tente novamente mais tarde.",
+    seconds: "segundos"
   },
   ru: {
     title: "Привет, Cloudflare Pages",
@@ -306,7 +333,14 @@ const translations = {
     accessDenied: "Доступ запрещён, возможно из-за ограничений анти-скрапинга",
     userNotFound: "Пользователь не найден или был забанен",
     serverNotRunning: "Сервер не запущен, пожалуйста, запустите server.js",
-    timeout: "Время запроса истекло, пожалуйста, проверьте свою сетевую подключение"
+    timeout: "Время запроса истекло, пожалуйста, проверьте свою сетевую подключение",
+    checkingServer: "Проверка соединения с сервером...",
+    apiNotFound: "API endpoint не найден, пожалуйста, проверьте, правильно ли запущен server.js",
+    autoRetryMessage: "Автоматический повтор, пожалуйста, подождите...",
+    connectionError: "Сбой соединения",
+    rateLimitError: "Слишком много запросов, повторная попытка через...",
+    autoRetryComplete: "Все попытки повтора завершены. Пожалуйста, попробуйте позже.",
+    seconds: "секунд"
   },
   ar: {
     title: "مرحبًا Cloudflare Pages",
@@ -337,7 +371,14 @@ const translations = {
     accessDenied: "تم رفض الوصول، ربما بسبب قيود مكافحة الكشط",
     userNotFound: "المستخدم غير موجود أو تم حظره",
     serverNotRunning: "الخادم الخلفي غير قيد التشغيل، يرجى تشغيل server.js",
-    timeout: "انتهت مهلة الطلب، يرجى التحقق من اتصالك بالشبكة"
+    timeout: "انتهت مهلة الطلب، يرجى التحقق من اتصالك بالشبكة",
+    checkingServer: "جاري التحقق من اتصال الخادم...",
+    apiNotFound: "نقطة نهاية API غير موجودة، يرجى التحقق من تشغيل server.js بشكل صحيح",
+    autoRetryMessage: "جاري إعادة المحاولة تلقائيًا، يرجى الانتظار...",
+    connectionError: "فشل الاتصال",
+    rateLimitError: "طلبات كثيرة جدًا، إعادة المحاولة خلال...",
+    autoRetryComplete: "تمت جميع محاولات إعادة المحاولة. يرجى المحاولة مرة أخرى لاحقًا.",
+    seconds: "ثانية"
   }
 };
 
@@ -393,7 +434,7 @@ const checkServerConnection = async () => {
 };
 
 // 获取用户视频列表（带自动重试）
-const fetchUserVideos = async (retryCount = 3) => {
+const fetchUserVideos = async (retryCount = 99) => {
   loadingVideo.value = true;
   videoError.value = '';
   autoRetrying.value = false;
@@ -523,10 +564,12 @@ const fetchUserVideos = async (retryCount = 3) => {
       // 如果不是最后一次尝试，设置自动重试状态
       if (attempt < retryCount) {
         autoRetrying.value = true;
-        const waitTime = 2000 + (attempt - 1) * 2000; // 递增等待时间：2秒、4秒、6秒
-        console.log(`等待 ${waitTime / 1000} 秒后重试...`);
+        // 递增等待时间：基础2秒，每次增加1秒，最大60秒
+        const waitTime = Math.min(2000 + (attempt - 1) * 1000, 60000);
+        const waitSeconds = Math.round(waitTime / 1000);
+        console.log(`等待 ${waitSeconds} 秒后重试...`);
         
-        videoError.value = err.message || (t.value.connectionError || '连接失败');
+        videoError.value = `${t.value.rateLimitError || '请求过于频繁，稍后重试...'} ${waitSeconds}${t.value.seconds || '秒'}`;
         await new Promise(resolve => setTimeout(resolve, waitTime));
         videoError.value = ''; // 清除错误信息，继续重试
         continue;
@@ -535,22 +578,7 @@ const fetchUserVideos = async (retryCount = 3) => {
       // 如果是最后一次尝试，设置错误信息
       if (attempt === retryCount) {
         autoRetrying.value = false;
-        let errorMessage = t.value.videoFetchError || '获取视频失败，请重试';
-        
-        // 根据错误类型提供更详细的错误信息
-        if (err.response?.status === 403) {
-          errorMessage = t.value.accessDenied || '访问被拒绝，可能是B站反爬虫限制';
-        } else if (err.response?.status === 404) {
-          errorMessage = t.value.userNotFound || '用户不存在或已被封禁';
-        } else if (err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
-          errorMessage = t.value.serverNotRunning || '后端服务器未运行，请启动server.js';
-        } else if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
-          errorMessage = t.value.timeout || '请求超时，请检查网络连接';
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-        
-        videoError.value = errorMessage;
+        videoError.value = t.value.autoRetryComplete || '所有重试尝试已完成，请稍后再试。';
         showProgress.value = false;
         
         setTimeout(() => {
