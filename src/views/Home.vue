@@ -242,8 +242,8 @@ const fetchUserVideos = async () => {
   videoError.value = '';
   
   try {
-    // 使用B站API获取用户视频列表
-    const response = await axios.get(`https://api.bilibili.com/x/space/arc/search`, {
+    // 使用代理服务器调用B站API获取用户视频列表
+    const response = await axios.get(`/api/x/space/arc/search`, {
       params: {
         mid: userId,
         ps: 30, // 每页数量
