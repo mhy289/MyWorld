@@ -47,23 +47,55 @@
       
       <!-- 视频内嵌区域 -->
       <div class="video-container">
-        <h4 class="text-gray-700 text-md mb-3">{{ t.videoTitle }}</h4>
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-gray-700 text-md">{{ t.videoTitle }}</h4>
+          <div class="flex items-center gap-2">
+            <span v-if="!loadingVideo && !videoError && currentVideo" class="text-sm text-gray-500">
+              {{ t.videoCount }}: {{ userVideos.length }}
+            </span>
+            <el-button @click="refreshVideo" :loading="loadingVideo" size="small" type="primary">
+              <el-icon class="mr-1"><Refresh /></el-icon>
+              {{ t.refresh }}
+            </el-button>
+          </div>
+        </div>
+        
+        <!-- 加载状态 -->
         <div v-if="loadingVideo" class="text-center py-8">
           <el-icon class="is-loading" :size="32" color="#409eff">
             <Loading />
           </el-icon>
-          <p class="text-gray-500 mt-2">{{ t.loadingVideo }}</p>
+          <p class="text-gray-500 mt-2">{{ loadingMessage }}</p>
+          <el-progress 
+            v-if="showProgress" 
+            :percentage="loadingProgress" 
+            :status="loadingProgress === 100 ? 'success' : undefined"
+            class="mt-4 max-w-xs mx-auto"
+          />
         </div>
+        
+        <!-- 错误状态 -->
         <div v-else-if="videoError" class="text-center py-8">
           <el-icon :size="32" color="#f56c6c">
             <Warning />
           </el-icon>
           <p class="text-red-500 mt-2">{{ videoError }}</p>
-          <el-button @click="fetchUserVideos" class="mt-3" size="small">
+          <el-button @click="fetchUserVideos" class="mt-3" size="small" type="danger">
             {{ t.retry }}
           </el-button>
         </div>
+        
+        <!-- 视频显示 -->
         <div v-else-if="currentVideo" class="video-wrapper">
+          <div class="video-info-bar bg-gray-50 p-3 rounded-t-lg flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <el-icon color="#409eff"><VideoPlay /></el-icon>
+              <span class="text-sm text-gray-700 font-medium truncate max-w-xs">{{ currentVideo.title }}</span>
+            </div>
+            <div class="text-xs text-gray-500">
+              {{ t.playCount }}: {{ formatPlayCount(currentVideo.play) }} | {{ t.uploadTime }}: {{ formatDate(currentVideo.created) }}
+            </div>
+          </div>
           <iframe
             :src="`https://player.bilibili.com/player.html?bvid=${currentVideo.bvid}&page=1&high_quality=1&danmaku=0`"
             scrolling="no"
@@ -73,7 +105,17 @@
             allowfullscreen="true"
             class="bilibili-player"
           ></iframe>
-          <p class="text-gray-600 mt-3 text-center">{{ currentVideo.title }}</p>
+        </div>
+        
+        <!-- 初始状态提示 -->
+        <div v-else class="text-center py-8 text-gray-400">
+          <el-icon :size="48" color="#d1d5db">
+            <VideoCamera />
+          </el-icon>
+          <p class="mt-2">{{ t.noVideoLoaded }}</p>
+          <el-button @click="fetchUserVideos" class="mt-3" size="small" type="primary">
+            {{ t.loadVideo }}
+          </el-button>
         </div>
       </div>
     </div>
@@ -83,7 +125,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning } = Icons;
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera } = Icons;
 import { ElIcon, ElButton, ElSelect, ElOption } from 'element-plus';
 import axios from 'axios';
 
@@ -103,7 +145,17 @@ const translations = {
     loadingVideo: "Loading video...",
     noVideos: "No videos found",
     videoFetchError: "Failed to fetch video, please try again",
-    retry: "Retry"
+    retry: "Retry",
+    refresh: "Refresh",
+    videoCount: "Total Videos",
+    connectingServer: "Connecting to server...",
+    processingData: "Processing data...",
+    loadSuccess: "Loading successful!",
+    switchingVideo: "Switching video...",
+    playCount: "Views",
+    uploadTime: "Upload Date",
+    noVideoLoaded: "No video loaded yet",
+    loadVideo: "Load Videos"
   },
   zh: {
     title: "你好，Cloudflare Pages",
@@ -119,7 +171,17 @@ const translations = {
     loadingVideo: "正在加载视频...",
     noVideos: "未找到视频",
     videoFetchError: "获取视频失败，请重试",
-    retry: "重试"
+    retry: "重试",
+    refresh: "刷新",
+    videoCount: "视频总数",
+    connectingServer: "正在连接服务器...",
+    processingData: "正在处理数据...",
+    loadSuccess: "加载成功！",
+    switchingVideo: "正在切换视频...",
+    playCount: "播放量",
+    uploadTime: "上传时间",
+    noVideoLoaded: "暂未加载视频",
+    loadVideo: "加载视频"
   },
   fr: {
     title: "Bonjour Cloudflare Pages",
@@ -135,7 +197,17 @@ const translations = {
     loadingVideo: "Chargement de la vidéo...",
     noVideos: "Aucune vidéo trouvée",
     videoFetchError: "Échec du chargement de la vidéo, veuillez réessayer",
-    retry: "Réessayer"
+    retry: "Réessayer",
+    refresh: "Actualiser",
+    videoCount: "Total des Vidéos",
+    connectingServer: "Connexion au serveur...",
+    processingData: "Traitement des données...",
+    loadSuccess: "Chargement réussi !",
+    switchingVideo: "Changement de vidéo...",
+    playCount: "Vues",
+    uploadTime: "Date de Téléchargement",
+    noVideoLoaded: "Aucune vidéo chargée",
+    loadVideo: "Charger les Vidéos"
   },
   es: {
     title: "Hola Cloudflare Pages",
@@ -151,7 +223,17 @@ const translations = {
     loadingVideo: "Cargando video...",
     noVideos: "No se encontraron videos",
     videoFetchError: "Error al cargar el video, por favor inténtelo de nuevo",
-    retry: "Reintentar"
+    retry: "Reintentar",
+    refresh: "Actualizar",
+    videoCount: "Total de Videos",
+    connectingServer: "Conectando al servidor...",
+    processingData: "Procesando datos...",
+    loadSuccess: "¡Carga exitosa!",
+    switchingVideo: "Cambiando video...",
+    playCount: "Vistas",
+    uploadTime: "Fecha de Subida",
+    noVideoLoaded: "No hay videos cargados",
+    loadVideo: "Cargar Videos"
   },
   pt: {
     title: "Olá Cloudflare Pages",
@@ -167,7 +249,17 @@ const translations = {
     loadingVideo: "Carregando vídeo...",
     noVideos: "Nenhum vídeo encontrado",
     videoFetchError: "Falha ao carregar o vídeo, tente novamente",
-    retry: "Tentar Novamente"
+    retry: "Tentar Novamente",
+    refresh: "Atualizar",
+    videoCount: "Total de Vídeos",
+    connectingServer: "Conectando ao servidor...",
+    processingData: "Processando dados...",
+    loadSuccess: "Carregamento com sucesso!",
+    switchingVideo: "Trocando vídeo...",
+    playCount: "Visualizações",
+    uploadTime: "Data de Upload",
+    noVideoLoaded: "Nenhum vídeo carregado",
+    loadVideo: "Carregar Vídeos"
   },
   ru: {
     title: "Привет, Cloudflare Pages",
@@ -183,7 +275,17 @@ const translations = {
     loadingVideo: "Загрузка видео...",
     noVideos: "Видео не найдены",
     videoFetchError: "Не удалось загрузить видео, попробуйте снова",
-    retry: "Повторить"
+    retry: "Повторить",
+    refresh: "Обновить",
+    videoCount: "Всего Видео",
+    connectingServer: "Подключение к серверу...",
+    processingData: "Обработка данных...",
+    loadSuccess: "Загрузка успешна!",
+    switchingVideo: "Переключение видео...",
+    playCount: "Просмотры",
+    uploadTime: "Дата Загрузки",
+    noVideoLoaded: "Видео не загружено",
+    loadVideo: "Загрузить Видео"
   },
   ar: {
     title: "مرحبًا Cloudflare Pages",
@@ -199,7 +301,17 @@ const translations = {
     loadingVideo: "جاري تحميل الفيديو...",
     noVideos: "لم يتم العثور على فيديوهات",
     videoFetchError: "فشل في تحميل الفيديو، يرجى المحاولة مرة أخرى",
-    retry: "إعادة المحاولة"
+    retry: "إعادة المحاولة",
+    refresh: "تحديث",
+    videoCount: "إجمالي الفيديوهات",
+    connectingServer: "جاري الاتصال بالخادم...",
+    processingData: "جاري معالجة البيانات...",
+    loadSuccess: "تم التحميل بنجاح!",
+    switchingVideo: "جاري تغيير الفيديو...",
+    playCount: "المشاهدات",
+    uploadTime: "تاريخ الرفع",
+    noVideoLoaded: "لم يتم تحميل فيديو",
+    loadVideo: "تحميل الفيديوهات"
   }
 };
 
@@ -214,6 +326,9 @@ const videoError = ref('');
 const userVideos = ref([]);
 const currentVideo = ref(null);
 const userId = '165392864'; // B站用户ID
+const loadingMessage = ref('');
+const loadingProgress = ref(0);
+const showProgress = ref(false);
 
 const getIP = async () => {
   loading.value = true;
@@ -240,8 +355,18 @@ const t = computed(() => translations[language.value]);
 const fetchUserVideos = async () => {
   loadingVideo.value = true;
   videoError.value = '';
+  loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
+  loadingProgress.value = 0;
+  showProgress.value = true;
   
   try {
+    // 模拟进度
+    const progressInterval = setInterval(() => {
+      if (loadingProgress.value < 70) {
+        loadingProgress.value += 10;
+      }
+    }, 200);
+
     // 使用后端服务器代理调用B站API获取用户视频列表
     const response = await axios.get(`http://localhost:8080/api/bilibili/user/videos`, {
       params: {
@@ -250,20 +375,74 @@ const fetchUserVideos = async () => {
       timeout: 10000
     });
 
+    clearInterval(progressInterval);
+    loadingProgress.value = 90;
+    loadingMessage.value = t.value.processingData || '正在处理数据...';
+
+    await new Promise(resolve => setTimeout(resolve, 300)); // 模拟处理延迟
+    loadingProgress.value = 100;
+
     if (response.data.code === 0 && response.data.data.list.vlist.length > 0) {
       userVideos.value = response.data.data.list.vlist;
       // 随机选择一个视频
       const randomIndex = Math.floor(Math.random() * userVideos.value.length);
       currentVideo.value = userVideos.value[randomIndex];
+      loadingMessage.value = t.value.loadSuccess || '加载成功！';
     } else {
       videoError.value = t.value.noVideos || '未找到视频';
     }
   } catch (err) {
     console.error('获取视频失败:', err);
     videoError.value = t.value.videoFetchError || '获取视频失败，请重试';
+    showProgress.value = false;
   } finally {
-    loadingVideo.value = false;
+    setTimeout(() => {
+      loadingVideo.value = false;
+      showProgress.value = false;
+      loadingProgress.value = 0;
+    }, 500);
   }
+};
+
+// 刷新视频（选择新的随机视频）
+const refreshVideo = async () => {
+  if (userVideos.value.length > 1) {
+    // 如果已加载视频列表，直接从列表中选择新的随机视频
+    loadingVideo.value = true;
+    loadingMessage.value = t.value.switchingVideo || '正在切换视频...';
+    
+    await new Promise(resolve => setTimeout(resolve, 300)); // 模拟切换延迟
+    
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * userVideos.value.length);
+    } while (newIndex === userVideos.value.indexOf(currentVideo.value) && userVideos.value.length > 1);
+    
+    currentVideo.value = userVideos.value[newIndex];
+    loadingVideo.value = false;
+  } else {
+    // 如果没有视频列表或只有一个视频，重新获取
+    await fetchUserVideos();
+  }
+};
+
+// 格式化播放量
+const formatPlayCount = (count) => {
+  if (count >= 10000) {
+    return (count / 10000).toFixed(1) + '万';
+  } else if (count >= 1000) {
+    return (count / 1000).toFixed(1) + 'k';
+  }
+  return count.toString();
+};
+
+// 格式化日期
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 </script>
 
@@ -307,5 +486,15 @@ const fetchUserVideos = async () => {
   width: 100%;
   aspect-ratio: 16 / 9;
   display: block;
+}
+
+.video-info-bar {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.video-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 </style>
