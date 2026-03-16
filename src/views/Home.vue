@@ -487,9 +487,14 @@ const fetchUserVideos = async (retryCount = 99) => {
         throw new Error(`HTTP 404: ${response.data?.message || response.data?.error || '接口不存在'}`);
       }
       
-      // 其他4xx错误也不应该重试
-      if (response.status >= 400 && response.status < 500) {
-        throw new Error(`HTTP ${response.status}: ${response.data?.message || response.data?.error || '请求失败'}`);
+      // 403错误也不应该重试
+      if (response.status === 403) {
+        throw new Error(`HTTP 403: ${response.data?.message || response.data?.error || '访问被拒绝'}`);
+      }
+      
+      // 412错误是B站反爬虫限制，可以重试
+      if (response.status === 412) {
+        throw new Error(`HTTP 412: ${response.data?.message || response.data?.error || '请求被限制'} 可重试`);
       }
 
       // 5xx错误可以重试
@@ -538,10 +543,9 @@ const fetchUserVideos = async (retryCount = 99) => {
       const isNonRetryableError = 
         err.message?.includes('HTTP 404') ||
         err.message?.includes('HTTP 403') ||
-        err.message?.includes('HTTP 412') ||
         err.message?.includes('接口不存在') ||
         err.message?.includes('访问被拒绝') ||
-        err.message?.includes('request was banned');
+        (err.message?.includes('HTTP 412') && !err.message?.includes('可重试'));
       
       if (isNonRetryableError) {
         // 不可重试的错误，立即返回
