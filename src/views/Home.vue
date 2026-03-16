@@ -48,12 +48,7 @@
       <!-- 视频内嵌区域 -->
       <div class="video-container">
         <div class="flex justify-between items-center mb-3">
-          <h4 class="text-gray-700 text-md">{{ t.videoTitle }}</h4>
-          <div class="flex items-center gap-2">
-            <span v-if="!loadingVideo && !videoError && currentVideo" class="text-sm text-gray-500">
-              {{ t.videoCount }}: {{ userVideos.length }}
-            </span>
-          </div>
+          <h4 class="text-gray-700 text-md">*******</h4>
         </div>
         
         <!-- 加载状态 -->
@@ -126,12 +121,11 @@ const translations = {
     loadingIP: "Loading IP address...",
     errorIP: "Failed to fetch IP. Please try again.",
     link: "Follow the streamer Thank You Meow",
-    videoTitle: "Random Video from Channel",
+
     loadingVideo: "Loading video...",
     noVideos: "No videos found",
     videoFetchError: "Failed to fetch video, please try again",
     retry: "Retry",
-    videoCount: "Total Videos",
     connectingServer: "Connecting to server...",
     processingData: "Processing data...",
     loadSuccess: "Loading successful!",
@@ -163,12 +157,11 @@ const translations = {
     loadingIP: "正在加载 IP 地址...",
     errorIP: "获取 IP 失败，请重试。",
     link: "关注主播谢谢喵",
-    videoTitle: "频道随机视频",
+
     loadingVideo: "正在加载视频...",
     noVideos: "未找到视频",
     videoFetchError: "获取视频失败，请重试",
     retry: "重试",
-    videoCount: "视频总数",
     connectingServer: "正在连接服务器...",
     processingData: "正在处理数据...",
     loadSuccess: "加载成功！",
@@ -200,13 +193,12 @@ const translations = {
     loadingIP: "Chargement de l'adresse IP...",
     errorIP: "Échec de la récupération de l'IP. Veuillez réessayer.",
     link: "Suivez le streamer Merci Miaou",
-    videoTitle: "Vidéo Aléatoire de la Chaîne",
+
     loadingVideo: "Chargement de la vidéo...",
     noVideos: "Aucune vidéo trouvée",
     videoFetchError: "Échec du chargement de la vidéo, veuillez réessayer",
     retry: "Réessayer",
     refresh: "Actualiser",
-    videoCount: "Total des Vidéos",
     connectingServer: "Connexion au serveur...",
     processingData: "Traitement des données...",
     loadSuccess: "Chargement réussi !",
@@ -238,13 +230,12 @@ const translations = {
     loadingIP: "Cargando dirección IP...",
     errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo.",
     link: "Sigue al streamer Gracias Miau",
-    videoTitle: "Video Aleatorio del Canal",
+
     loadingVideo: "Cargando video...",
     noVideos: "No se encontraron videos",
     videoFetchError: "Error al cargar el video, por favor inténtelo de nuevo",
     retry: "Reintentar",
     refresh: "Actualizar",
-    videoCount: "Total de Videos",
     connectingServer: "Conectando al servidor...",
     processingData: "Procesando datos...",
     loadSuccess: "¡Carga exitosa!",
@@ -276,13 +267,12 @@ const translations = {
     loadingIP: "Carregando endereço IP...",
     errorIP: "Falha ao obter o IP. Por favor, tente novamente.",
     link: "Siga o streamer Obrigado Miau",
-    videoTitle: "Vídeo Aleatório do Canal",
+
     loadingVideo: "Carregando vídeo...",
     noVideos: "Nenhum vídeo encontrado",
     videoFetchError: "Falha ao carregar o vídeo, tente novamente",
     retry: "Tentar Novamente",
     refresh: "Atualizar",
-    videoCount: "Total de Vídeos",
     connectingServer: "Conectando ao servidor...",
     processingData: "Processando dados...",
     loadSuccess: "Carregamento com sucesso!",
@@ -314,13 +304,12 @@ const translations = {
     loadingIP: "Загрузка IP-адреса...",
     errorIP: "Не удалось получить IP. Пожалуйста, попробуйте снова.",
     link: "Следите за стримером Спасибо Мяу",
-    videoTitle: "Случайное Видео с Канала",
+
     loadingVideo: "Загрузка видео...",
     noVideos: "Видео не найдены",
     videoFetchError: "Не удалось загрузить видео, попробуйте снова",
     retry: "Повторить",
     refresh: "Обновить",
-    videoCount: "Всего Видео",
     connectingServer: "Подключение к серверу...",
     processingData: "Обработка данных...",
     loadSuccess: "Загрузка успешна!",
@@ -352,13 +341,12 @@ const translations = {
     loadingIP: "جاري تحميل عنوان IP...",
     errorIP: "فشل في جلب عنوان IP. يرجى المحاولة مرة أخرى.",
     link: "تابع الستريمر شكراً مياو",
-    videoTitle: "فيديو عشوائي من القناة",
+
     loadingVideo: "جاري تحميل الفيديو...",
     noVideos: "لم يتم العثور على فيديوهات",
     videoFetchError: "فشل في تحميل الفيديو، يرجى المحاولة مرة أخرى",
     retry: "إعادة المحاولة",
     refresh: "تحديث",
-    videoCount: "إجمالي الفيديوهات",
     connectingServer: "جاري الاتصال بالخادم...",
     processingData: "جاري معالجة البيانات...",
     loadSuccess: "تم التحميل بنجاح!",
@@ -451,7 +439,8 @@ const fetchUserVideos = async (retryCount = 99) => {
     return;
   }
   
-  loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
+      loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
+      loadingProgress.value = Math.round(((attempt - 1) / retryCount) * 100); // 根据重试次数设置进度
   
   for (let attempt = 1; attempt <= retryCount; attempt++) {
     let progressInterval;
@@ -461,12 +450,8 @@ const fetchUserVideos = async (retryCount = 99) => {
         ? `${t.value.retrying || '正在重试...'} (${attempt}/${retryCount})`
         : (t.value.connectingServer || '正在连接服务器...');
       
-      // 模拟进度
-      progressInterval = setInterval(() => {
-        if (loadingProgress.value < 70) {
-          loadingProgress.value += 10;
-        }
-      }, 200);
+      // 根据当前重试次数更新进度
+      loadingProgress.value = Math.round((attempt / retryCount) * 100);
 
       // 使用后端服务器代理调用B站API获取用户视频列表
       const response = await axios.get(`http://localhost:8080/api/bilibili/user/videos`, {
@@ -521,6 +506,7 @@ const fetchUserVideos = async (retryCount = 99) => {
         currentVideo.value = userVideos.value[randomIndex];
         loadingMessage.value = t.value.loadSuccess || '加载成功！';
         autoRetrying.value = false;
+        loadingProgress.value = 100; // 成功时进度为100%
         
         setTimeout(() => {
           loadingVideo.value = false;
@@ -533,6 +519,7 @@ const fetchUserVideos = async (retryCount = 99) => {
         showProgress.value = false;
         loadingVideo.value = false;
         autoRetrying.value = false;
+        loadingProgress.value = 0;
         return;
       }
     } catch (err) {
@@ -572,8 +559,8 @@ const fetchUserVideos = async (retryCount = 99) => {
       // 如果不是最后一次尝试，设置自动重试状态
       if (attempt < retryCount) {
         autoRetrying.value = true;
-        // 递增等待时间：基础2秒，每次增加1秒，最大60秒
-        const waitTime = Math.min(2000 + (attempt - 1) * 1000, 60000);
+        // 随机等待时间：5-10秒
+        const waitTime = Math.floor(Math.random() * 5000) + 5000;
         const waitSeconds = Math.round(waitTime / 1000);
         console.log(`等待 ${waitSeconds} 秒后重试...`);
         
