@@ -155,7 +155,12 @@ const translations = {
     playCount: "Views",
     uploadTime: "Upload Date",
     noVideoLoaded: "No video loaded yet",
-    loadVideo: "Load Videos"
+    loadVideo: "Load Videos",
+    retrying: "Retrying...",
+    accessDenied: "Access denied, possibly due to anti-scraping restrictions",
+    userNotFound: "User not found or has been banned",
+    serverNotRunning: "Backend server is not running, please start server.js",
+    timeout: "Request timeout, please check your network connection"
   },
   zh: {
     title: "你好，Cloudflare Pages",
@@ -181,7 +186,12 @@ const translations = {
     playCount: "播放量",
     uploadTime: "上传时间",
     noVideoLoaded: "暂未加载视频",
-    loadVideo: "加载视频"
+    loadVideo: "加载视频",
+    retrying: "正在重试...",
+    accessDenied: "访问被拒绝，可能是B站反爬虫限制",
+    userNotFound: "用户不存在或已被封禁",
+    serverNotRunning: "后端服务器未运行，请启动server.js",
+    timeout: "请求超时，请检查网络连接"
   },
   fr: {
     title: "Bonjour Cloudflare Pages",
@@ -207,7 +217,12 @@ const translations = {
     playCount: "Vues",
     uploadTime: "Date de Téléchargement",
     noVideoLoaded: "Aucune vidéo chargée",
-    loadVideo: "Charger les Vidéos"
+    loadVideo: "Charger les Vidéos",
+    retrying: "Réessayez...",
+    accessDenied: "Accès refusé, probablement d'un blocage anti-scraping",
+    userNotFound: "Utilisateur introuvable ou banni",
+    serverNotRunning: "Le serveur de l'arrière-plan n'est pas en cours d'exécution, veuillez démarrer server.js",
+    timeout: "Délai d'attente dépassé, veuillez vérifier votre connexion réseau"
   },
   es: {
     title: "Hola Cloudflare Pages",
@@ -233,7 +248,12 @@ const translations = {
     playCount: "Vistas",
     uploadTime: "Fecha de Subida",
     noVideoLoaded: "No hay videos cargados",
-    loadVideo: "Cargar Videos"
+    loadVideo: "Cargar Videos",
+    retrying: "Reintentando...",
+    accessDenied: "Acceso denegado, posiblemente debido a restricciones anti-scraping",
+    userNotFound: "Usuario no encontrado o ha sido baneado",
+    serverNotRunning: "El servidor backend no está en funcionamiento, por favor inicia server.js",
+    timeout: "Tiempo de espera agotado, por favor verifica tu conexión de red"
   },
   pt: {
     title: "Olá Cloudflare Pages",
@@ -259,7 +279,12 @@ const translations = {
     playCount: "Visualizações",
     uploadTime: "Data de Upload",
     noVideoLoaded: "Nenhum vídeo carregado",
-    loadVideo: "Carregar Vídeos"
+    loadVideo: "Carregar Vídeos",
+    retrying: "Repetindo...",
+    accessDenied: "Acesso negado, possivelmente devido a restrições anti-scraping",
+    userNotFound: "Usuário não encontrado ou foi banido",
+    serverNotRunning: "O servidor backend não está em execução, por favor inicie o server.js",
+    timeout: "Tempo de solicitação esgotado, por favor verifique sua conexão de rede"
   },
   ru: {
     title: "Привет, Cloudflare Pages",
@@ -285,7 +310,12 @@ const translations = {
     playCount: "Просмотры",
     uploadTime: "Дата Загрузки",
     noVideoLoaded: "Видео не загружено",
-    loadVideo: "Загрузить Видео"
+    loadVideo: "Загрузить Видео",
+    retrying: "Повторная попытка...",
+    accessDenied: "Доступ запрещён, возможно из-за ограничений анти-скрапинга",
+    userNotFound: "Пользователь не найден или был забанен",
+    serverNotRunning: "Сервер не запущен, пожалуйста, запустите server.js",
+    timeout: "Время запроса истекло, пожалуйста, проверьте свою сетевую подключение"
   },
   ar: {
     title: "مرحبًا Cloudflare Pages",
@@ -311,7 +341,12 @@ const translations = {
     playCount: "المشاهدات",
     uploadTime: "تاريخ الرفع",
     noVideoLoaded: "لم يتم تحميل فيديو",
-    loadVideo: "تحميل الفيديوهات"
+    loadVideo: "تحميل الفيديوهات",
+    retrying: "جاري إعادة المحاولة...",
+    accessDenied: "تم رفض الوصول، ربما بسبب قيود مكافحة الكشط",
+    userNotFound: "المستخدم غير موجود أو تم حظره",
+    serverNotRunning: "الخادم الخلفي غير قيد التشغيل، يرجى تشغيل server.js",
+    timeout: "انتهت مهلة الطلب، يرجى التحقق من اتصالك بالشبكة"
   }
 };
 
@@ -351,57 +386,87 @@ onMounted(() => {
 
 const t = computed(() => translations[language.value]);
 
-// 获取用户视频列表
-const fetchUserVideos = async () => {
+// 获取用户视频列表（带自动重试）
+const fetchUserVideos = async (retryCount = 3) => {
   loadingVideo.value = true;
   videoError.value = '';
   loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
   loadingProgress.value = 0;
   showProgress.value = true;
   
-  try {
-    // 模拟进度
-    const progressInterval = setInterval(() => {
-      if (loadingProgress.value < 70) {
-        loadingProgress.value += 10;
+  for (let attempt = 1; attempt <= retryCount; attempt++) {
+    try {
+      console.log(`尝试获取视频 (第${attempt}/${retryCount}次)`);
+      loadingMessage.value = attempt > 1 
+        ? `${t.value.retrying || '正在重试...'} (${attempt}/${retryCount})`
+        : (t.value.connectingServer || '正在连接服务器...');
+      
+      // 模拟进度
+      const progressInterval = setInterval(() => {
+        if (loadingProgress.value < 70) {
+          loadingProgress.value += 10;
+        }
+      }, 200);
+
+      // 使用后端服务器代理调用B站API获取用户视频列表
+      const response = await axios.get(`http://localhost:8080/api/bilibili/user/videos`, {
+        params: {
+          mid: userId
+        },
+        timeout: 15000
+      });
+
+      clearInterval(progressInterval);
+      loadingProgress.value = 90;
+      loadingMessage.value = t.value.processingData || '正在处理数据...';
+
+      await new Promise(resolve => setTimeout(resolve, 300)); // 模拟处理延迟
+      loadingProgress.value = 100;
+
+      if (response.data.code === 0 && response.data.data?.list?.vlist?.length > 0) {
+        userVideos.value = response.data.data.list.vlist;
+        // 随机选择一个视频
+        const randomIndex = Math.floor(Math.random() * userVideos.value.length);
+        currentVideo.value = userVideos.value[randomIndex];
+        loadingMessage.value = t.value.loadSuccess || '加载成功！';
+        return; // 成功则退出
+      } else {
+        videoError.value = response.data.message || (t.value.noVideos || '未找到视频');
+        return;
       }
-    }, 200);
-
-    // 使用后端服务器代理调用B站API获取用户视频列表
-    const response = await axios.get(`http://localhost:8080/api/bilibili/user/videos`, {
-      params: {
-        mid: userId
-      },
-      timeout: 10000
-    });
-
-    clearInterval(progressInterval);
-    loadingProgress.value = 90;
-    loadingMessage.value = t.value.processingData || '正在处理数据...';
-
-    await new Promise(resolve => setTimeout(resolve, 300)); // 模拟处理延迟
-    loadingProgress.value = 100;
-
-    if (response.data.code === 0 && response.data.data.list.vlist.length > 0) {
-      userVideos.value = response.data.data.list.vlist;
-      // 随机选择一个视频
-      const randomIndex = Math.floor(Math.random() * userVideos.value.length);
-      currentVideo.value = userVideos.value[randomIndex];
-      loadingMessage.value = t.value.loadSuccess || '加载成功！';
-    } else {
-      videoError.value = t.value.noVideos || '未找到视频';
+    } catch (err) {
+      console.error(`获取视频失败 (第${attempt}次尝试):`, err);
+      
+      // 如果是最后一次尝试，设置错误信息
+      if (attempt === retryCount) {
+        let errorMessage = t.value.videoFetchError || '获取视频失败，请重试';
+        
+        // 根据错误类型提供更详细的错误信息
+        if (err.response?.status === 403) {
+          errorMessage = t.value.accessDenied || '访问被拒绝，可能是B站反爬虫限制';
+        } else if (err.response?.status === 404) {
+          errorMessage = t.value.userNotFound || '用户不存在或已被封禁';
+        } else if (err.code === 'ECONNREFUSED') {
+          errorMessage = t.value.serverNotRunning || '后端服务器未运行，请启动server.js';
+        } else if (err.code === 'ETIMEDOUT') {
+          errorMessage = t.value.timeout || '请求超时，请检查网络连接';
+        }
+        
+        videoError.value = errorMessage;
+        showProgress.value = false;
+        return;
+      }
+      
+      // 等待一段时间再重试
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
-  } catch (err) {
-    console.error('获取视频失败:', err);
-    videoError.value = t.value.videoFetchError || '获取视频失败，请重试';
-    showProgress.value = false;
-  } finally {
-    setTimeout(() => {
-      loadingVideo.value = false;
-      showProgress.value = false;
-      loadingProgress.value = 0;
-    }, 500);
   }
+  
+  setTimeout(() => {
+    loadingVideo.value = false;
+    showProgress.value = false;
+    loadingProgress.value = 0;
+  }, 500);
 };
 
 // 刷新视频（选择新的随机视频）
