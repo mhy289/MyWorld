@@ -73,6 +73,19 @@ app.get('/api/bilibili/user/videos', async (req, res) => {
   }
 });
 
+// 健康检查接口
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    message: 'Backend server is running' 
+  });
+});
+
 app.listen(8080, () => {
+  console.log('=================================');
   console.log('Server running on port 8080');
+  console.log('Health check: http://localhost:8080/api/health');
+  console.log('Bilibili API: http://localhost:8080/api/bilibili/user/videos?mid=165392864');
+  console.log('=================================');
 });

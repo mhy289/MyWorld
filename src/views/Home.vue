@@ -160,7 +160,9 @@ const translations = {
     accessDenied: "Access denied, possibly due to anti-scraping restrictions",
     userNotFound: "User not found or has been banned",
     serverNotRunning: "Backend server is not running, please start server.js",
-    timeout: "Request timeout, please check your network connection"
+    timeout: "Request timeout, please check your network connection",
+    checkingServer: "Checking server connection...",
+    apiNotFound: "Backend API endpoint not found, please check if server.js is running correctly"
   },
   zh: {
     title: "你好，Cloudflare Pages",
@@ -191,7 +193,9 @@ const translations = {
     accessDenied: "访问被拒绝，可能是B站反爬虫限制",
     userNotFound: "用户不存在或已被封禁",
     serverNotRunning: "后端服务器未运行，请启动server.js",
-    timeout: "请求超时，请检查网络连接"
+    timeout: "请求超时，请检查网络连接",
+    checkingServer: "正在检查服务器连接...",
+    apiNotFound: "后端API接口不存在，请检查server.js是否正确运行"
   },
   fr: {
     title: "Bonjour Cloudflare Pages",
@@ -386,15 +390,41 @@ onMounted(() => {
 
 const t = computed(() => translations[language.value]);
 
+// 检查后端服务器连接
+const checkServerConnection = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/health', {
+      timeout: 3000
+    });
+    console.log('服务器连接正常:', response.data);
+    return true;
+  } catch (err) {
+    console.error('服务器连接失败:', err.message);
+    return false;
+  }
+};
+
 // 获取用户视频列表（带自动重试）
 const fetchUserVideos = async (retryCount = 3) => {
   loadingVideo.value = true;
   videoError.value = '';
-  loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
+  loadingMessage.value = t.value.checkingServer || '正在检查服务器连接...';
   loadingProgress.value = 0;
   showProgress.value = true;
   
+  // 首先检查服务器是否运行
+  const serverConnected = await checkServerConnection();
+  if (!serverConnected) {
+    videoError.value = t.value.serverNotRunning || '后端服务器未运行，请启动server.js';
+    showProgress.value = false;
+    loadingVideo.value = false;
+    return;
+  }
+  
+  loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
+  
   for (let attempt = 1; attempt <= retryCount; attempt++) {
+    let progressInterval;
     try {
       console.log(`尝试获取视频 (第${attempt}/${retryCount}次)`);
       loadingMessage.value = attempt > 1 
@@ -402,7 +432,7 @@ const fetchUserVideos = async (retryCount = 3) => {
         : (t.value.connectingServer || '正在连接服务器...');
       
       // 模拟进度
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         if (loadingProgress.value < 70) {
           loadingProgress.value += 10;
         }
@@ -413,10 +443,30 @@ const fetchUserVideos = async (retryCount = 3) => {
         params: {
           mid: userId
         },
-        timeout: 15000
+        timeout: 20000,
+        validateStatus: function (status) {
+          return status >= 200 && status < 600; // 接受所有状态码，手动处理错误
+        }
       });
 
       clearInterval(progressInterval);
+      console.log('收到响应:', response.status, response.data);
+
+      // 检查响应状态 - 404错误不应该重试，立即返回
+      if (response.status === 404) {
+        throw new Error(`HTTP 404: ${response.data?.message || response.data?.error || '接口不存在'}`);
+      }
+      
+      // 其他4xx错误也不应该重试
+      if (response.status >= 400 && response.status < 500) {
+        throw new Error(`HTTP ${response.status}: ${response.data?.message || response.data?.error || '请求失败'}`);
+      }
+
+      // 5xx错误可以重试
+      if (response.status >= 500) {
+        throw new Error(`HTTP ${response.status}: 服务器错误，正在重试...`);
+      }
+
       loadingProgress.value = 90;
       loadingMessage.value = t.value.processingData || '正在处理数据...';
 
@@ -429,13 +479,48 @@ const fetchUserVideos = async (retryCount = 3) => {
         const randomIndex = Math.floor(Math.random() * userVideos.value.length);
         currentVideo.value = userVideos.value[randomIndex];
         loadingMessage.value = t.value.loadSuccess || '加载成功！';
+        
+        setTimeout(() => {
+          loadingVideo.value = false;
+          showProgress.value = false;
+          loadingProgress.value = 0;
+        }, 500);
         return; // 成功则退出
       } else {
         videoError.value = response.data.message || (t.value.noVideos || '未找到视频');
+        showProgress.value = false;
+        loadingVideo.value = false;
         return;
       }
     } catch (err) {
+      if (progressInterval) clearInterval(progressInterval);
       console.error(`获取视频失败 (第${attempt}次尝试):`, err);
+      
+      // 检查是否是不可重试的错误
+      const isNonRetryableError = 
+        err.message?.includes('HTTP 404') ||
+        err.message?.includes('HTTP 403') ||
+        err.message?.includes('接口不存在') ||
+        err.message?.includes('访问被拒绝');
+      
+      if (isNonRetryableError) {
+        // 不可重试的错误，立即返回
+        let errorMessage = err.message;
+        if (err.message?.includes('HTTP 404')) {
+          errorMessage = t.value.apiNotFound || '后端API接口不存在，请检查server.js是否正确运行';
+        } else if (err.message?.includes('HTTP 403')) {
+          errorMessage = t.value.accessDenied || '访问被拒绝，可能是B站反爬虫限制';
+        }
+        
+        videoError.value = errorMessage;
+        showProgress.value = false;
+        
+        setTimeout(() => {
+          loadingVideo.value = false;
+          loadingProgress.value = 0;
+        }, 500);
+        return;
+      }
       
       // 如果是最后一次尝试，设置错误信息
       if (attempt === retryCount) {
@@ -446,27 +531,29 @@ const fetchUserVideos = async (retryCount = 3) => {
           errorMessage = t.value.accessDenied || '访问被拒绝，可能是B站反爬虫限制';
         } else if (err.response?.status === 404) {
           errorMessage = t.value.userNotFound || '用户不存在或已被封禁';
-        } else if (err.code === 'ECONNREFUSED') {
+        } else if (err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
           errorMessage = t.value.serverNotRunning || '后端服务器未运行，请启动server.js';
-        } else if (err.code === 'ETIMEDOUT') {
+        } else if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
           errorMessage = t.value.timeout || '请求超时，请检查网络连接';
+        } else if (err.message) {
+          errorMessage = err.message;
         }
         
         videoError.value = errorMessage;
         showProgress.value = false;
+        
+        setTimeout(() => {
+          loadingVideo.value = false;
+          loadingProgress.value = 0;
+        }, 500);
         return;
       }
       
       // 等待一段时间再重试
+      console.log(`等待 ${attempt} 秒后重试...`);
       await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
   }
-  
-  setTimeout(() => {
-    loadingVideo.value = false;
-    showProgress.value = false;
-    loadingProgress.value = 0;
-  }, 500);
 };
 
 // 刷新视频（选择新的随机视频）
