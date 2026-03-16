@@ -439,11 +439,10 @@ const fetchUserVideos = async (retryCount = 99) => {
     return;
   }
   
-      loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
-      loadingProgress.value = Math.round(((attempt - 1) / retryCount) * 100); // 根据重试次数设置进度
+  loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
+  loadingProgress.value = 0; // 初始进度为0
   
   for (let attempt = 1; attempt <= retryCount; attempt++) {
-    let progressInterval;
     try {
       console.log(`尝试获取视频 (第${attempt}/${retryCount}次)`);
       loadingMessage.value = attempt > 1 
@@ -464,7 +463,6 @@ const fetchUserVideos = async (retryCount = 99) => {
         }
       });
 
-      clearInterval(progressInterval);
       console.log('收到响应:', response.status, response.data);
 
       // 检查响应状态 - 404错误不应该重试，立即返回
@@ -523,7 +521,6 @@ const fetchUserVideos = async (retryCount = 99) => {
         return;
       }
     } catch (err) {
-      if (progressInterval) clearInterval(progressInterval);
       console.error(`获取视频失败 (第${attempt}次尝试):`, err);
       
       // 检查是否是不可重试的错误
