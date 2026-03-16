@@ -53,10 +53,6 @@
             <span v-if="!loadingVideo && !videoError && currentVideo" class="text-sm text-gray-500">
               {{ t.videoCount }}: {{ userVideos.length }}
             </span>
-            <el-button @click="refreshVideo" :loading="loadingVideo" size="small" type="primary">
-              <el-icon class="mr-1"><Refresh /></el-icon>
-              {{ t.refresh }}
-            </el-button>
           </div>
         </div>
         
@@ -74,17 +70,16 @@
           />
         </div>
         
-        <!-- 错误状态 -->
-        <div v-else-if="videoError" class="text-center py-8">
-          <el-icon :size="32" color="#f56c6c">
-            <Warning />
+        <!-- 错误状态 - 自动重试中 -->
+        <div v-else-if="videoError && autoRetrying" class="text-center py-8">
+          <el-icon class="is-loading" :size="32" color="#e6a23c">
+            <Loading />
           </el-icon>
-          <p class="text-red-500 mt-2">{{ videoError }}</p>
-          <el-button @click="fetchUserVideos" class="mt-3" size="small" type="danger">
-            {{ t.retry }}
-          </el-button>
+          <p class="text-orange-500 mt-2">{{ videoError }}</p>
+          <p class="text-gray-500 text-sm mt-1">{{ t.autoRetryMessage }}</p>
         </div>
         
+
         <!-- 视频显示 -->
         <div v-else-if="currentVideo" class="video-wrapper">
           <div class="video-info-bar bg-gray-50 p-3 rounded-t-lg flex justify-between items-center">
@@ -107,17 +102,7 @@
           ></iframe>
         </div>
         
-        <!-- 初始状态提示 -->
-        <div v-else class="text-center py-8 text-gray-400">
-          <el-icon :size="48" color="#d1d5db">
-            <VideoCamera />
-          </el-icon>
-          <p class="mt-2">{{ t.noVideoLoaded }}</p>
-          <el-button @click="fetchUserVideos" class="mt-3" size="small" type="primary">
-            {{ t.loadVideo }}
-          </el-button>
-        </div>
-      </div>
+</div>
     </div>
   </div>
 </template>
@@ -146,7 +131,6 @@ const translations = {
     noVideos: "No videos found",
     videoFetchError: "Failed to fetch video, please try again",
     retry: "Retry",
-    refresh: "Refresh",
     videoCount: "Total Videos",
     connectingServer: "Connecting to server...",
     processingData: "Processing data...",
@@ -162,7 +146,9 @@ const translations = {
     serverNotRunning: "Backend server is not running, please start server.js",
     timeout: "Request timeout, please check your network connection",
     checkingServer: "Checking server connection...",
-    apiNotFound: "Backend API endpoint not found, please check if server.js is running correctly"
+    apiNotFound: "Backend API endpoint not found, please check if server.js is running correctly",
+    autoRetryMessage: "Automatically retrying, please wait...",
+    connectionError: "Connection failed"
   },
   zh: {
     title: "你好，Cloudflare Pages",
@@ -179,7 +165,6 @@ const translations = {
     noVideos: "未找到视频",
     videoFetchError: "获取视频失败，请重试",
     retry: "重试",
-    refresh: "刷新",
     videoCount: "视频总数",
     connectingServer: "正在连接服务器...",
     processingData: "正在处理数据...",
@@ -195,7 +180,9 @@ const translations = {
     serverNotRunning: "后端服务器未运行，请启动server.js",
     timeout: "请求超时，请检查网络连接",
     checkingServer: "正在检查服务器连接...",
-    apiNotFound: "后端API接口不存在，请检查server.js是否正确运行"
+    apiNotFound: "后端API接口不存在，请检查server.js是否正确运行",
+    autoRetryMessage: "正在自动重试，请稍候...",
+    connectionError: "连接失败"
   },
   fr: {
     title: "Bonjour Cloudflare Pages",
@@ -368,6 +355,7 @@ const userId = '165392864'; // B站用户ID
 const loadingMessage = ref('');
 const loadingProgress = ref(0);
 const showProgress = ref(false);
+const autoRetrying = ref(false); // 是否正在自动重试
 
 const getIP = async () => {
   loading.value = true;
@@ -408,6 +396,7 @@ const checkServerConnection = async () => {
 const fetchUserVideos = async (retryCount = 3) => {
   loadingVideo.value = true;
   videoError.value = '';
+  autoRetrying.value = false;
   loadingMessage.value = t.value.checkingServer || '正在检查服务器连接...';
   loadingProgress.value = 0;
   showProgress.value = true;
@@ -443,7 +432,7 @@ const fetchUserVideos = async (retryCount = 3) => {
         params: {
           mid: userId
         },
-        timeout: 20000,
+        timeout: 25000,
         validateStatus: function (status) {
           return status >= 200 && status < 600; // 接受所有状态码，手动处理错误
         }
@@ -470,8 +459,14 @@ const fetchUserVideos = async (retryCount = 3) => {
       loadingProgress.value = 90;
       loadingMessage.value = t.value.processingData || '正在处理数据...';
 
-      await new Promise(resolve => setTimeout(resolve, 300)); // 模拟处理延迟
+      await new Promise(resolve => setTimeout(resolve, 500)); // 模拟处理延迟
       loadingProgress.value = 100;
+
+      // 检查B站API返回的错误码
+      if (response.data.code === -799) {
+        // 请求过于频繁，可以重试
+        throw new Error('请求过于频繁，请稍后再试');
+      }
 
       if (response.data.code === 0 && response.data.data?.list?.vlist?.length > 0) {
         userVideos.value = response.data.data.list.vlist;
@@ -479,17 +474,19 @@ const fetchUserVideos = async (retryCount = 3) => {
         const randomIndex = Math.floor(Math.random() * userVideos.value.length);
         currentVideo.value = userVideos.value[randomIndex];
         loadingMessage.value = t.value.loadSuccess || '加载成功！';
+        autoRetrying.value = false;
         
         setTimeout(() => {
           loadingVideo.value = false;
           showProgress.value = false;
           loadingProgress.value = 0;
-        }, 500);
+        }, 800);
         return; // 成功则退出
       } else {
         videoError.value = response.data.message || (t.value.noVideos || '未找到视频');
         showProgress.value = false;
         loadingVideo.value = false;
+        autoRetrying.value = false;
         return;
       }
     } catch (err) {
@@ -513,17 +510,31 @@ const fetchUserVideos = async (retryCount = 3) => {
         }
         
         videoError.value = errorMessage;
+        autoRetrying.value = false;
         showProgress.value = false;
         
         setTimeout(() => {
           loadingVideo.value = false;
           loadingProgress.value = 0;
-        }, 500);
+        }, 800);
         return;
+      }
+      
+      // 如果不是最后一次尝试，设置自动重试状态
+      if (attempt < retryCount) {
+        autoRetrying.value = true;
+        const waitTime = 2000 + (attempt - 1) * 2000; // 递增等待时间：2秒、4秒、6秒
+        console.log(`等待 ${waitTime / 1000} 秒后重试...`);
+        
+        videoError.value = err.message || (t.value.connectionError || '连接失败');
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        videoError.value = ''; // 清除错误信息，继续重试
+        continue;
       }
       
       // 如果是最后一次尝试，设置错误信息
       if (attempt === retryCount) {
+        autoRetrying.value = false;
         let errorMessage = t.value.videoFetchError || '获取视频失败，请重试';
         
         // 根据错误类型提供更详细的错误信息
@@ -545,25 +556,21 @@ const fetchUserVideos = async (retryCount = 3) => {
         setTimeout(() => {
           loadingVideo.value = false;
           loadingProgress.value = 0;
-        }, 500);
+        }, 800);
         return;
       }
-      
-      // 等待一段时间再重试
-      console.log(`等待 ${attempt} 秒后重试...`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
   }
 };
 
-// 刷新视频（选择新的随机视频）
+// 刷新视频（选择新的随机视频）- 内部使用，不暴露给用户
 const refreshVideo = async () => {
   if (userVideos.value.length > 1) {
     // 如果已加载视频列表，直接从列表中选择新的随机视频
     loadingVideo.value = true;
     loadingMessage.value = t.value.switchingVideo || '正在切换视频...';
     
-    await new Promise(resolve => setTimeout(resolve, 300)); // 模拟切换延迟
+    await new Promise(resolve => setTimeout(resolve, 500)); // 模拟切换延迟
     
     let newIndex;
     do {
