@@ -371,6 +371,32 @@ const translations = {
 };
 
 const language = ref('en');
+
+// 根据IP判断地区，设置默认语言
+const detectLanguageByIP = (ipAddress) => {
+  if (!ipAddress) return 'en';
+  
+  // 中国大陆IP段判断（简单判断）
+  if (/^1\d{2}\./.test(ipAddress) || 
+      /^2[0-4]\d\./.test(ipAddress) || 
+      /^25[0-5]\./.test(ipAddress) ||
+      ipAddress.startsWith('114.') ||
+      ipAddress.startsWith('223.') ||
+      ipAddress.startsWith('183.') ||
+      ipAddress.startsWith('123.')) {
+    return 'zh';
+  }
+  
+  // 港澳台IP
+  if (ipAddress.startsWith('202.') || 
+      ipAddress.startsWith('203.') ||
+      ipAddress.startsWith('210.') ||
+      ipAddress.startsWith('218.')) {
+    return 'zh';
+  }
+  
+  return 'en';
+};
 const ip = ref('');
 const loading = ref(false);
 const error = ref(false);
@@ -393,6 +419,9 @@ const getIP = async () => {
     const response = await fetch('https://api.ipify.org?format=json');
     const data = await response.json();
     ip.value = data.ip;
+    
+    // 根据IP自动检测语言
+    language.value = detectLanguageByIP(data.ip);
   } catch (err) {
     error.value = true;
   } finally {
