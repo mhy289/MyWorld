@@ -412,6 +412,13 @@ const loadingProgress = ref(0);
 const showProgress = ref(false);
 const autoRetrying = ref(false); // 是否正在自动重试
 
+// 预准备的BV号列表（备用视频）
+const fallbackVideos = [
+  { bvid: 'BV12gNTz4E5k', title: 'Bilibili', play: 99999999, created: 1609459200 },
+  { bvid: 'BV1Mv4y157k3', title: 'Bilibili', play: 100000, created: 1640995200 },
+  { bvid: 'BV1Dg4y1M7QE', title: 'Bilibili', play: 50000, created: 1672531200 }
+];
+
 const getIP = async () => {
   loading.value = true;
   error.value = false;
@@ -450,8 +457,92 @@ const checkServerConnection = async () => {
   }
 };
 
-// 获取用户视频列表（带自动重试）
-const fetchUserVideos = async (retryCount = 99) => {
+// 获取用户视频列表（取消重试，失败使用备用视频）
+const fetchUserVideos = async () => {
+  loadingVideo.value = true;
+  videoError.value = '';
+  autoRetrying.value = false;
+  loadingMessage.value = t.value.checkingServer || '正在检查服务器连接...';
+  loadingProgress.value = 0;
+  showProgress.value = true;
+  
+  try {
+    // 首先检查服务器是否运行
+    const serverConnected = await checkServerConnection();
+    if (!serverConnected) {
+      console.log('服务器未连接，使用备用视频');
+      // 服务器未连接，使用备用视频
+      const randomFallback = fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
+      currentVideo.value = randomFallback;
+      loadingMessage.value = '使用备用视频';
+      
+      setTimeout(() => {
+        loadingVideo.value = false;
+        showProgress.value = false;
+        loadingProgress.value = 0;
+      }, 800);
+      return;
+    }
+    
+    loadingMessage.value = t.value.connectingServer || '正在连接服务器...';
+    loadingProgress.value = 50;
+    
+    // 使用后端服务器代理调用B站API获取用户视频列表
+    const response = await axios.get(`http://localhost:8080/api/bilibili/user/videos`, {
+      params: {
+        mid: userId
+      },
+      timeout: 25000,
+      validateStatus: function (status) {
+        return status >= 200 && status < 600;
+      }
+    });
+
+    console.log('收到响应:', response.status, response.data);
+
+    // 检查B站API返回的错误码
+    if (response.data.code === -799 || response.data.code === -352) {
+      throw new Error(`B站风控限制 (错误码: ${response.data.code})`);
+    }
+
+    loadingProgress.value = 90;
+    loadingMessage.value = t.value.processingData || '正在处理数据...';
+
+    if (response.data.code === 0 && response.data.data?.list?.vlist?.length > 0) {
+      userVideos.value = response.data.data.list.vlist;
+      const randomIndex = Math.floor(Math.random() * userVideos.value.length);
+      currentVideo.value = userVideos.value[randomIndex];
+      loadingMessage.value = t.value.loadSuccess || '加载成功！';
+      loadingProgress.value = 100;
+      
+      setTimeout(() => {
+        loadingVideo.value = false;
+        showProgress.value = false;
+        loadingProgress.value = 0;
+      }, 800);
+    } else {
+      throw new Error('未找到视频');
+    }
+  } catch (err) {
+    console.error('获取视频失败，使用备用视频:', err.message);
+    
+    // 失败时使用备用视频
+    const randomFallback = fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
+    currentVideo.value = randomFallback;
+    loadingMessage.value = 'API请求失败，使用备用视频';
+    loadingProgress.value = 100;
+    
+    setTimeout(() => {
+      loadingVideo.value = false;
+      showProgress.value = false;
+      loadingProgress.value = 0;
+    }, 800);
+  }
+};
+
+/*
+// 带重试的获取用户视频列表（已注释）
+const fetchUserVideosWithRetry = async (retryCount = 99) => {
   loadingVideo.value = true;
   videoError.value = '';
   autoRetrying.value = false;
@@ -611,6 +702,7 @@ const fetchUserVideos = async (retryCount = 99) => {
     }
   }
 };
+*/
 
 // 刷新视频（选择新的随机视频）- 内部使用，不暴露给用户
 const refreshVideo = async () => {
