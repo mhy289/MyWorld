@@ -36,6 +36,18 @@
       </div>
     </el-card>
 
+    <!-- 访客计数器和时间 -->
+    <div class="flex justify-center gap-6 mt-4 text-sm text-gray-500">
+      <div class="flex items-center gap-1">
+        <el-icon><View /></el-icon>
+        <span>{{ t.visitorCount }}: {{ visitorCount }}</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <el-icon><Clock /></el-icon>
+        <span>{{ currentTime }}</span>
+      </div>
+    </div>
+
     <!-- 装饰元素 -->
     <div class="flex justify-center mt-10">
       <el-icon :size="60" color="#3b82f6" :opacity="0.8">
@@ -111,9 +123,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument } = Icons;
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock } = Icons;
 import { ElIcon, ElButton, ElSelect, ElOption } from 'element-plus';
 import axios from 'axios';
 
@@ -126,6 +138,7 @@ const translations = {
     language: "Language",
     getIP: "Get IP",
     yourIP: "Your IP Address:",
+    visitorCount: "Visitors",
     loadingIP: "Loading IP address...",
     errorIP: "Failed to fetch IP. Please try again.",
     link: "Follow the streamer Thank You Meow",
@@ -162,6 +175,7 @@ const translations = {
     language: "语言",
     getIP: "获取 IP",
     yourIP: "你的 IP 地址：",
+    visitorCount: "访客",
     loadingIP: "正在加载 IP 地址...",
     errorIP: "获取 IP 失败，请重试。",
     link: "关注主播谢谢喵",
@@ -198,6 +212,7 @@ const translations = {
     language: "Langue",
     getIP: "Obtenir l'IP",
     yourIP: "Votre adresse IP :",
+    visitorCount: "Visiteurs",
     loadingIP: "Chargement de l'adresse IP...",
     errorIP: "Échec de la récupération de l'IP. Veuillez réessayer.",
     link: "Suivez le streamer Merci Miaou",
@@ -235,6 +250,7 @@ const translations = {
     language: "Idioma",
     getIP: "Obtener IP",
     yourIP: "Tu dirección IP:",
+    visitorCount: "Visitantes",
     loadingIP: "Cargando dirección IP...",
     errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo.",
     link: "Sigue al streamer Gracias Miau",
@@ -272,6 +288,7 @@ const translations = {
     language: "Idioma",
     getIP: "Obter IP",
     yourIP: "Seu endereço IP:",
+    visitorCount: "Visitantes",
     loadingIP: "Carregando endereço IP...",
     errorIP: "Falha ao obter o IP. Por favor, tente novamente.",
     link: "Siga o streamer Obrigado Miau",
@@ -309,6 +326,7 @@ const translations = {
     language: "Язык",
     getIP: "Получить IP",
     yourIP: "Ваш IP-адрес:",
+    visitorCount: "Посетители",
     loadingIP: "Загрузка IP-адреса...",
     errorIP: "Не удалось получить IP. Пожалуйста, попробуйте снова.",
     link: "Следите за стримером Спасибо Мяу",
@@ -346,6 +364,7 @@ const translations = {
     language: "اللغة",
     getIP: "الحصول على IP",
     yourIP: "عنوان IP الخاص بك:",
+    visitorCount: "الزوار",
     loadingIP: "جاري تحميل عنوان IP...",
     errorIP: "فشل في جلب عنوان IP. يرجى المحاولة مرة أخرى.",
     link: "تابع الستريمر شكراً مياو",
@@ -409,6 +428,23 @@ const ip = ref('');
 const loading = ref(false);
 const error = ref(false);
 const copied = ref(false);
+
+// 访客计数和当前时间
+const visitorCount = ref(0);
+const currentTime = ref('');
+
+const updateVisitorCount = () => {
+  const count = localStorage.getItem('visitor_count') || '0';
+  const newCount = parseInt(count) + 1;
+  localStorage.setItem('visitor_count', newCount.toString());
+  visitorCount.value = newCount;
+};
+
+let timerInterval = null;
+const updateTime = () => {
+  const now = new Date();
+  currentTime.value = now.toLocaleString();
+};
 
 // 视频相关状态
 const loadingVideo = ref(false);
@@ -775,6 +811,16 @@ const formatDate = (timestamp) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+onMounted(() => {
+  updateVisitorCount();
+  updateTime();
+  timerInterval = setInterval(updateTime, 1000);
+});
+
+onUnmounted(() => {
+  if (timerInterval) clearInterval(timerInterval);
+});
 </script>
 
 <style scoped>
