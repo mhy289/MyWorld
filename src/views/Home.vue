@@ -16,16 +16,16 @@
         </el-button>
       </div>
 
-      <div v-if="loading" class="text-gray-500 font-mono text-xl">
+      <div v-if="loading" class="text-gray-500 dark:text-gray-400 font-mono text-xl">
         {{ t.loadingIP }}
       </div>
-      <div v-else-if="error" class="text-red-500 font-mono text-xl">
+      <div v-else-if="error" class="text-red-500 dark:text-red-400 font-mono text-xl">
         {{ t.errorIP }}
       </div>
       <div v-else>
-        <p class="text-gray-600 font-mono">{{ t.yourIP }}</p>
+        <p class="text-gray-600 dark:text-gray-400 font-mono">{{ t.yourIP }}</p>
         <div class="flex items-center justify-center gap-2 mt-2">
-          <span class="text-blue-600 font-mono text-xl">{{ ip }}</span>
+          <span class="text-blue-600 dark:text-blue-400 font-mono text-xl">{{ ip }}</span>
           <el-button size="small" circle @click="copyIP" :type="copied ? 'success' : 'default'">
             <el-icon>
               <Check v-if="copied" />
@@ -37,7 +37,7 @@
     </el-card>
 
     <!-- 访客计数器和时间 -->
-    <div class="flex justify-center gap-6 mt-4 text-sm text-gray-500">
+    <div class="flex justify-center gap-6 mt-4 text-sm text-gray-500 dark:text-gray-400">
       <div class="flex items-center gap-1">
         <el-icon><View /></el-icon>
         <span>{{ t.visitorCount }}: {{ visitorCount }}</span>
@@ -57,10 +57,10 @@
 
     <!-- 添加的文本和超链接 -->
     <div class="additional-content mt-8">
-      <h3 class="text-gray-800 text-lg mb-4">关于项目</h3>
-      <p class="text-gray-600 mb-4">{{ t.description }}</p>
+      <h3 class="text-gray-800 dark:text-gray-200 text-lg mb-4">关于项目</h3>
+      <p class="text-gray-600 dark:text-gray-400 mb-4">{{ t.description }}</p>
       <div class="links mb-6">
-        <a href="https://space.bilibili.com/165392864" target="_blank" class="text-blue-600 hover:text-blue-800 mr-4">
+        <a href="https://space.bilibili.com/165392864" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-4">
           {{ t.link}}
         </a>
       </div>
@@ -68,7 +68,7 @@
       <!-- 视频内嵌区域 -->
       <div class="video-container">
         <div class="flex justify-between items-center mb-3">
-          <h4 class="text-gray-700 text-md">*******</h4>
+          <h4 class="text-gray-700 dark:text-gray-300 text-md">*******</h4>
         </div>
         
         <!-- 加载状态 -->
@@ -76,7 +76,7 @@
           <el-icon class="is-loading" :size="32" color="#409eff">
             <Loading />
           </el-icon>
-          <p class="text-gray-500 mt-2">{{ loadingMessage }}</p>
+          <p class="text-gray-500 dark:text-gray-400 mt-2">{{ loadingMessage }}</p>
           <el-progress 
             v-if="showProgress" 
             :percentage="loadingProgress" 
@@ -90,19 +90,19 @@
           <el-icon class="is-loading" :size="32" color="#e6a23c">
             <Loading />
           </el-icon>
-          <p class="text-orange-500 mt-2">{{ videoError }}</p>
-          <p class="text-gray-500 text-sm mt-1">{{ t.autoRetryMessage }}</p>
+          <p class="text-orange-500 dark:text-orange-400 mt-2">{{ videoError }}</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ t.autoRetryMessage }}</p>
         </div>
         
 
         <!-- 视频显示 -->
         <div v-else-if="currentVideo" class="video-wrapper">
-          <div class="video-info-bar bg-gray-50 p-3 rounded-t-lg flex justify-between items-center">
+          <div class="video-info-bar bg-gray-50 dark:bg-gray-800 p-3 rounded-t-lg flex justify-between items-center">
             <div class="flex items-center gap-2">
               <el-icon color="#409eff"><VideoPlay /></el-icon>
-              <span class="text-sm text-gray-700 font-medium truncate max-w-xs">{{ currentVideo.title }}</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300 font-medium truncate max-w-xs">{{ currentVideo.title }}</span>
             </div>
-            <div class="text-xs text-gray-500">
+            <div class="text-xs text-gray-500 dark:text-gray-400">
               {{ t.playCount }}: {{ formatPlayCount(currentVideo.play) }} | {{ t.uploadTime }}: {{ formatDate(currentVideo.created) }}
             </div>
           </div>

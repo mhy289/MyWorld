@@ -7,6 +7,12 @@
     <router-link to="/vote" class="vote-link">
       投票页面
     </router-link>
+    <div class="theme-toggle" @click="toggleTheme" :title="isDark ? '切换亮色模式' : '切换暗色模式'">
+      <el-icon :size="18">
+        <Sunny v-if="isDark" />
+        <Moon v-else />
+      </el-icon>
+    </div>
     <router-view class="router-view" />
     <transition name="fade">
       <div
@@ -22,9 +28,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { HomeFilled, Top } from '@element-plus/icons-vue';
+import { HomeFilled, Top, Sunny, Moon } from '@element-plus/icons-vue';
 
 const showBackTop = ref(false);
+const isDark = ref(false);
 
 const handleScroll = () => {
   showBackTop.value = window.scrollY > 300;
@@ -34,8 +41,20 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+const toggleTheme = () => {
+  isDark.value = !isDark.value;
+  if (isDark.value) {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }
+};
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
+  isDark.value = document.documentElement.classList.contains('dark');
 });
 
 onUnmounted(() => {
@@ -62,6 +81,14 @@ onUnmounted(() => {
   position: fixed;
   top: 20px;
   z-index: 1000;
+  color: #303133;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.dark .home-link,
+.dark .vote-link {
+  color: #e5e7eb;
 }
 
 .home-link {
@@ -74,6 +101,37 @@ onUnmounted(() => {
 
 .vote-link {
   right: 20px;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 110px;
+  z-index: 1000;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: #606266;
+  transition: all 0.3s;
+}
+
+.theme-toggle:hover {
+  background: #e0e0e0;
+  transform: scale(1.1);
+}
+
+.dark .theme-toggle {
+  background: #363637;
+  color: #e5e7eb;
+}
+
+.dark .theme-toggle:hover {
+  background: #4a4a4b;
 }
 
 .router-view {

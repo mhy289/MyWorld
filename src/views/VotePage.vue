@@ -24,47 +24,59 @@ export default {
     return {
       options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       voteCounts: {},
-      chart: null
+      chart: null,
+      isDark: false
     };
   },
   mounted() {
+    this.isDark = document.documentElement.classList.contains('dark');
     this.initChart();
     this.options.forEach(option => {
       this.voteCounts[option] = 0;
     });
     this.fetchVotes();
+    this.observeTheme();
   },
   methods: {
     initChart() {
-      this.chart = echarts.init(this.$refs.chartContainer);
+      this.chart = echarts.init(this.$refs.chartContainer, this.isDark ? 'dark' : undefined);
       this.updateChart();
     },
     updateChart() {
+      const textColor = this.isDark ? '#e5e7eb' : '#333';
       const option = {
         tooltip: {},
         xAxis: {
           type: 'category',
           data: this.options,
-          axisLabel: {
-            color: '#333'
-          }
+          axisLabel: { color: textColor }
         },
         yAxis: {
           type: 'value',
-          axisLabel: {
-            color: '#333'
-          }
+          axisLabel: { color: textColor }
         },
         series: [{
           data: this.options.map(option => this.voteCounts[option]),
           type: 'bar',
-          itemStyle: {
-            color: '#409EFF'
-          },
+          itemStyle: { color: '#409EFF' },
           barWidth: '40%'
         }]
       };
       this.chart.setOption(option);
+    },
+    observeTheme() {
+      const observer = new MutationObserver(() => {
+        const newDark = document.documentElement.classList.contains('dark');
+        if (newDark !== this.isDark) {
+          this.isDark = newDark;
+          if (this.chart) {
+            this.chart.dispose();
+            this.initChart();
+            this.fetchVotes();
+          }
+        }
+      });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     },
     async vote(option) {
       try {
@@ -99,7 +111,15 @@ export default {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  color: #303133;
+  transition: color 0.3s;
 }
+
+.dark .vote-container,
+.vote-container.dark {
+  color: #e5e7eb;
+}
+
 .options {
   display: flex;
   flex-wrap: wrap;
@@ -120,5 +140,9 @@ export default {
   margin-top: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dark .chart-container {
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.4);
 }
 </style>

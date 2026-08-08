@@ -9,6 +9,14 @@
 body {
   @apply antialiased text-gray-800;
   font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f5f7fa;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.dark body,
+body.dark {
+  background: #141414;
+  color: #e5e7eb;
 }
 
 /* 按钮动画 */
@@ -19,4 +27,18 @@ body {
 /* 卡片效果 */
 .card {
   @apply bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.dark .card {
+  @apply bg-gray-800/80 border-gray-700;
+}
+
+/* 暗色模式通用样式 */
+.dark a {
+  color: #60a5fa;
+}
+
+.dark a:hover {
+  color: #93c5fd;
 }

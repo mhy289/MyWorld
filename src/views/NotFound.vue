@@ -44,10 +44,18 @@ import { HomeFilled } from '@element-plus/icons-vue';
   margin: 16px 0 8px;
 }
 
+.dark .error-text {
+  color: #e5e7eb;
+}
+
 .error-desc {
   font-size: 14px;
   color: #909399;
   margin: 0 0 32px;
+}
+
+.dark .error-desc {
+  color: #6b7280;
 }
 
 .back-btn {
