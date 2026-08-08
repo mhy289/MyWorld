@@ -24,7 +24,15 @@
       </div>
       <div v-else>
         <p class="text-gray-600 font-mono">{{ t.yourIP }}</p>
-        <span class="text-blue-600 font-mono text-xl">{{ ip }}</span>
+        <div class="flex items-center justify-center gap-2 mt-2">
+          <span class="text-blue-600 font-mono text-xl">{{ ip }}</span>
+          <el-button size="small" circle @click="copyIP" :type="copied ? 'success' : 'default'">
+            <el-icon>
+              <Check v-if="copied" />
+              <CopyDocument v-else />
+            </el-icon>
+          </el-button>
+        </div>
       </div>
     </el-card>
 
@@ -105,7 +113,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera } = Icons;
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument } = Icons;
 import { ElIcon, ElButton, ElSelect, ElOption } from 'element-plus';
 import axios from 'axios';
 
@@ -400,6 +408,7 @@ const detectLanguageByIP = (ipAddress) => {
 const ip = ref('');
 const loading = ref(false);
 const error = ref(false);
+const copied = ref(false);
 
 // 视频相关状态
 const loadingVideo = ref(false);
@@ -433,6 +442,28 @@ const getIP = async () => {
     error.value = true;
   } finally {
     loading.value = false;
+  }
+};
+
+const copyIP = async () => {
+  try {
+    await navigator.clipboard.writeText(ip.value);
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
+  } catch {
+    // fallback
+    const textarea = document.createElement('textarea');
+    textarea.value = ip.value;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
   }
 };
 
