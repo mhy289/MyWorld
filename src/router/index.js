@@ -10,6 +10,11 @@ const routes = [
     path: '/vote',
     name: 'Vote',
     component: () => import('../views/VotePage.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/NotFound.vue')
   }
 ];
 
