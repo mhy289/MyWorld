@@ -1,6 +1,14 @@
 <template>
   <div class="vote-container">
     <h2>投票系统</h2>
+    <div class="mode-indicator">
+      <span v-if="backendAvailable" class="mode-tag online">
+        <i class="el-icon-check"></i> 在线模式
+      </span>
+      <span v-else class="mode-tag offline">
+        <i class="el-icon-warning"></i> 离线模式（数据仅保存在本地）
+      </span>
+    </div>
     <div class="options">
       <button 
         v-for="option in options" 
@@ -15,9 +23,11 @@
 </template>
 
 <script>
-import axios from 'axios';
 import * as echarts from 'echarts';
+import axios from 'axios';
 import { ElMessage } from 'element-plus';
+
+const STORAGE_KEY = 'local_votes';
 
 export default {
   data() {
@@ -25,19 +35,78 @@ export default {
       options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       voteCounts: {},
       chart: null,
-      isDark: false
+      isDark: false,
+      backendAvailable: false
     };
   },
-  mounted() {
+  async mounted() {
     this.isDark = document.documentElement.classList.contains('dark');
-    this.initChart();
     this.options.forEach(option => {
       this.voteCounts[option] = 0;
     });
-    this.fetchVotes();
+
+    // 优先尝试连接后端
+    await this.checkBackend();
+
+    if (this.backendAvailable) {
+      await this.fetchVotesFromBackend();
+      console.log('已连接后端，使用在线模式');
+    } else {
+      this.loadLocalVotes();
+      console.log('后端不可用，使用离线模式');
+    }
+
+    this.initChart();
     this.observeTheme();
   },
   methods: {
+    async checkBackend() {
+      try {
+        await axios.get('/votes', { timeout: 3000 });
+        this.backendAvailable = true;
+      } catch {
+        this.backendAvailable = false;
+      }
+    },
+    async fetchVotesFromBackend() {
+      try {
+        const response = await axios.get('/votes');
+        const data = response.data;
+        Object.keys(data).forEach(key => {
+          const numKey = Number(key);
+          if (this.options.includes(numKey)) {
+            this.voteCounts[numKey] = data[key];
+          }
+        });
+      } catch (e) {
+        console.warn('从后端获取投票数据失败，切换为离线模式:', e);
+        this.backendAvailable = false;
+        this.loadLocalVotes();
+      }
+    },
+    loadLocalVotes() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          Object.keys(parsed).forEach(key => {
+            const numKey = Number(key);
+            if (this.options.includes(numKey)) {
+              this.voteCounts[numKey] = parsed[key];
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('读取本地投票数据失败:', e);
+      }
+    },
+    saveLocalVotes() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.voteCounts));
+      } catch (e) {
+        console.warn('保存投票数据失败:', e);
+      }
+    },
     initChart() {
       this.chart = echarts.init(this.$refs.chartContainer, this.isDark ? 'dark' : undefined);
       this.updateChart();
@@ -72,35 +141,31 @@ export default {
           if (this.chart) {
             this.chart.dispose();
             this.initChart();
-            this.fetchVotes();
           }
         }
       });
       observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     },
     async vote(option) {
-      try {
-        console.log('发送投票请求:', { option });
-        const response = await this.$http.post('/vote', { option });
-        console.log('投票响应:', response.data);
-        this.voteCounts[option]++;
-        this.updateChart();
-        ElMessage.success('投票成功！');
-        //刷新页面
-        window.location.reload();
-      } catch (error) {
-        console.error('投票失败:', error.response?.data || error.message);
-        ElMessage.error('投票失败，请重试！');
+      if (this.backendAvailable) {
+        try {
+          await axios.post('/vote', { option }, { timeout: 3000 });
+          this.voteCounts[option]++;
+          this.updateChart();
+          ElMessage.success(`已为选项 ${option} 投票（在线），当前票数：${this.voteCounts[option]}`);
+          return;
+        } catch (e) {
+          console.warn('后端投票失败，自动切换为离线模式:', e);
+          ElMessage.warning('后端投票失败，已切换为离线模式');
+          this.backendAvailable = false;
+        }
       }
-    },
-    async fetchVotes() {
-      try {
-        console.log('获取投票数据...');
-        const response = await this.$http.get('/votes');
-        this.voteCounts = response.data;
-      } catch (error) {
-        console.error('获取投票数据失败:', error);
-      }
+
+      // 离线模式
+      this.voteCounts[option]++;
+      this.updateChart();
+      this.saveLocalVotes();
+      ElMessage.success(`已为选项 ${option} 投票（离线），当前票数：${this.voteCounts[option]}`);
     }
   }
 };
@@ -144,5 +209,42 @@ export default {
 
 .dark .chart-container {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.4);
+}
+
+.mode-indicator {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.mode-tag {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  transition: all 0.3s;
+}
+
+.mode-tag.online {
+  background: #e6f7e6;
+  color: #389e0d;
+  border: 1px solid #b7eb8f;
+}
+
+.dark .mode-tag.online {
+  background: rgba(56, 158, 13, 0.15);
+  color: #73d13d;
+  border-color: rgba(56, 158, 13, 0.3);
+}
+
+.mode-tag.offline {
+  background: #fff7e6;
+  color: #d48806;
+  border: 1px solid #ffd591;
+}
+
+.dark .mode-tag.offline {
+  background: rgba(212, 136, 6, 0.15);
+  color: #ffc53d;
+  border-color: rgba(212, 136, 6, 0.3);
 }
 </style>
