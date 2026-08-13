@@ -75,6 +75,75 @@
       </div>
     </el-card>
 
+    <!-- 常用链接卡片 -->
+    <el-card class="mt-4 max-w-2xl mx-auto">
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <el-icon color="#409eff"><Link /></el-icon>
+            <span>{{ t.linksTitle }}</span>
+          </span>
+          <el-button size="small" type="primary" @click="showAddLinkDialog = true">
+            <el-icon><Plus /></el-icon>
+            <span>{{ t.addLink }}</span>
+          </el-button>
+        </div>
+      </template>
+
+      <div v-if="links.length === 0" class="text-center py-6 text-gray-500 dark:text-gray-400">
+        {{ t.emptyLinks }}
+      </div>
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div
+          v-for="(item, index) in links"
+          :key="item.id"
+          class="link-item group relative flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 hover:shadow-md transition-all cursor-pointer"
+          @click="openLink(item.url)"
+        >
+          <div
+            class="flex items-center justify-center w-9 h-9 rounded-lg text-white font-bold text-sm shrink-0"
+            :style="{ backgroundColor: item.color }"
+          >
+            {{ item.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{{ item.name }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.host }}</p>
+          </div>
+          <el-button
+            size="small"
+            text
+            circle
+            class="opacity-0 group-hover:opacity-100 transition-opacity !ml-0"
+            @click.stop="removeLink(index)"
+          >
+            <el-icon color="#f56c6c"><Close /></el-icon>
+          </el-button>
+        </div>
+      </div>
+    </el-card>
+
+    <!-- 添加链接对话框 -->
+    <el-dialog
+      v-model="showAddLinkDialog"
+      :title="t.addLink"
+      width="420px"
+      :close-on-click-modal="false"
+    >
+      <el-form label-position="top" @submit.prevent="confirmAddLink">
+        <el-form-item :label="t.linkName">
+          <el-input v-model="newLink.name" :placeholder="t.linkNamePlaceholder" maxlength="30" />
+        </el-form-item>
+        <el-form-item :label="t.linkUrl">
+          <el-input v-model="newLink.url" :placeholder="t.linkUrlPlaceholder" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddLinkDialog = false">{{ t.cancel }}</el-button>
+        <el-button type="primary" @click="confirmAddLink">{{ t.confirmAdd }}</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 访客计数器和时间 -->
     <div class="flex justify-center gap-6 mt-4 text-sm text-gray-500 dark:text-gray-400">
       <div class="flex items-center gap-1">
@@ -164,8 +233,8 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location } = Icons;
-import { ElIcon, ElButton, ElSelect, ElOption } from 'element-plus';
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close } = Icons;
+import { ElIcon, ElButton, ElSelect, ElOption, ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
 
 // 多语言配置
@@ -187,6 +256,20 @@ const translations = {
     weatherError: "Failed to fetch weather",
     humidity: "Humidity",
     windSpeed: "Wind",
+
+    linksTitle: "Quick Links",
+    addLink: "Add Link",
+    linkName: "Name",
+    linkUrl: "URL",
+    confirmAdd: "Add",
+    cancel: "Cancel",
+    deleteConfirm: "Delete this link?",
+    linkNamePlaceholder: "Enter link name",
+    linkUrlPlaceholder: "Enter URL (e.g. https://...)",
+    emptyLinks: "No links yet, click \"Add Link\" to create one",
+    addLinkEmptyName: "Please enter name and URL",
+    addLinkSuccess: "Link added",
+    linkDeleted: "Link deleted",
 
     loadingVideo: "Loading video...",
     noVideos: "No videos found",
@@ -231,6 +314,20 @@ const translations = {
     humidity: "湿度",
     windSpeed: "风速",
 
+    linksTitle: "常用链接",
+    addLink: "添加链接",
+    linkName: "名称",
+    linkUrl: "链接地址",
+    confirmAdd: "添加",
+    cancel: "取消",
+    deleteConfirm: "确定删除该链接？",
+    linkNamePlaceholder: "请输入链接名称",
+    linkUrlPlaceholder: "请输入网址（如 https://...）",
+    emptyLinks: "暂无链接，点击「添加链接」创建一个",
+    addLinkEmptyName: "请输入名称和链接地址",
+    addLinkSuccess: "链接已添加",
+    linkDeleted: "链接已删除",
+
     loadingVideo: "正在加载视频...",
     noVideos: "未找到视频",
     videoFetchError: "获取视频失败，请重试",
@@ -273,6 +370,20 @@ const translations = {
     weatherError: "Échec de la récupération de la météo",
     humidity: "Humidité",
     windSpeed: "Vent",
+
+    linksTitle: "Liens rapides",
+    addLink: "Ajouter un lien",
+    linkName: "Nom",
+    linkUrl: "URL",
+    confirmAdd: "Ajouter",
+    cancel: "Annuler",
+    deleteConfirm: "Supprimer ce lien ?",
+    linkNamePlaceholder: "Entrez le nom du lien",
+    linkUrlPlaceholder: "Entrez l'URL (ex : https://...)",
+    emptyLinks: "Aucun lien, cliquez sur \"Ajouter un lien\" pour en créer un",
+    addLinkEmptyName: "Veuillez saisir le nom et l'URL",
+    addLinkSuccess: "Lien ajouté",
+    linkDeleted: "Lien supprimé",
 
     loadingVideo: "Chargement de la vidéo...",
     noVideos: "Aucune vidéo trouvée",
@@ -318,6 +429,20 @@ const translations = {
     humidity: "Humedad",
     windSpeed: "Viento",
 
+    linksTitle: "Enlaces rápidos",
+    addLink: "Agregar enlace",
+    linkName: "Nombre",
+    linkUrl: "URL",
+    confirmAdd: "Agregar",
+    cancel: "Cancelar",
+    deleteConfirm: "¿Eliminar este enlace?",
+    linkNamePlaceholder: "Ingrese el nombre del enlace",
+    linkUrlPlaceholder: "Ingrese la URL (ej. https://...)",
+    emptyLinks: "Sin enlaces, haga clic en \"Agregar enlace\" para crear uno",
+    addLinkEmptyName: "Ingrese el nombre y la URL",
+    addLinkSuccess: "Enlace agregado",
+    linkDeleted: "Enlace eliminado",
+
     loadingVideo: "Cargando video...",
     noVideos: "No se encontraron videos",
     videoFetchError: "Error al cargar el video, por favor inténtelo de nuevo",
@@ -361,6 +486,20 @@ const translations = {
     weatherError: "Falha ao obter o clima",
     humidity: "Umidade",
     windSpeed: "Vento",
+
+    linksTitle: "Links rápidos",
+    addLink: "Adicionar link",
+    linkName: "Nome",
+    linkUrl: "URL",
+    confirmAdd: "Adicionar",
+    cancel: "Cancelar",
+    deleteConfirm: "Excluir este link?",
+    linkNamePlaceholder: "Digite o nome do link",
+    linkUrlPlaceholder: "Digite a URL (ex: https://...)",
+    emptyLinks: "Sem links, clique em \"Adicionar link\" para criar um",
+    addLinkEmptyName: "Digite o nome e a URL",
+    addLinkSuccess: "Link adicionado",
+    linkDeleted: "Link excluído",
 
     loadingVideo: "Carregando vídeo...",
     noVideos: "Nenhum vídeo encontrado",
@@ -406,6 +545,20 @@ const translations = {
     humidity: "Влажность",
     windSpeed: "Ветер",
 
+    linksTitle: "Быстрые ссылки",
+    addLink: "Добавить ссылку",
+    linkName: "Название",
+    linkUrl: "URL",
+    confirmAdd: "Добавить",
+    cancel: "Отмена",
+    deleteConfirm: "Удалить эту ссылку?",
+    linkNamePlaceholder: "Введите название ссылки",
+    linkUrlPlaceholder: "Введите URL (напр. https://...)",
+    emptyLinks: "Нет ссылок, нажмите «Добавить ссылку», чтобы создать",
+    addLinkEmptyName: "Введите название и URL",
+    addLinkSuccess: "Ссылка добавлена",
+    linkDeleted: "Ссылка удалена",
+
     loadingVideo: "Загрузка видео...",
     noVideos: "Видео не найдены",
     videoFetchError: "Не удалось загрузить видео, попробуйте снова",
@@ -449,6 +602,20 @@ const translations = {
     weatherError: "فشل في الحصول على الطقس",
     humidity: "الرطوبة",
     windSpeed: "الرياح",
+
+    linksTitle: "روابط سريعة",
+    addLink: "إضافة رابط",
+    linkName: "الاسم",
+    linkUrl: "الرابط",
+    confirmAdd: "إضافة",
+    cancel: "إلغاء",
+    deleteConfirm: "حذف هذا الرابط؟",
+    linkNamePlaceholder: "أدخل اسم الرابط",
+    linkUrlPlaceholder: "أدخل الرابط (مثل: https://...)",
+    emptyLinks: "لا توجد روابط، انقر فوق «إضافة رابط» لإنشاء واحدة",
+    addLinkEmptyName: "يرجى إدخال الاسم والرابط",
+    addLinkSuccess: "تمت إضافة الرابط",
+    linkDeleted: "تم حذف الرابط",
 
     loadingVideo: "جاري تحميل الفيديو...",
     noVideos: "لم يتم العثور على فيديوهات",
@@ -551,6 +718,104 @@ const fetchWeather = async () => {
   }
 };
 
+// 常用链接
+const LINKS_STORAGE_KEY = 'quick_links';
+const linkColors = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#9b59b6', '#2ecc71', '#e67e22', '#1abc9c', '#3498db'];
+
+const defaultLinks = [
+  { name: 'Bilibili', url: 'https://www.bilibili.com', color: '#fb7299' },
+  { name: 'GitHub', url: 'https://github.com', color: '#181717' },
+  { name: 'Google', url: 'https://www.google.com', color: '#4285f4' },
+  { name: 'YouTube', url: 'https://www.youtube.com', color: '#ff0000' }
+];
+
+const links = ref([]);
+const showAddLinkDialog = ref(false);
+const newLink = ref({ name: '', url: '' });
+
+const getHost = (url) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+};
+
+const loadLinks = () => {
+  try {
+    const saved = localStorage.getItem(LINKS_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        links.value = parsed.map(item => ({
+          ...item,
+          host: getHost(item.url)
+        }));
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('读取常用链接失败:', e);
+  }
+  // 无数据时使用默认链接
+  links.value = defaultLinks.map(item => ({
+    ...item,
+    id: `link-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    host: getHost(item.url)
+  }));
+  saveLinks();
+};
+
+const saveLinks = () => {
+  try {
+    localStorage.setItem(LINKS_STORAGE_KEY, JSON.stringify(links.value));
+  } catch (e) {
+    console.warn('保存常用链接失败:', e);
+  }
+};
+
+const openLink = (url) => {
+  const fullUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  window.open(fullUrl, '_blank', 'noopener');
+};
+
+const confirmAddLink = () => {
+  const name = newLink.value.name.trim();
+  let url = newLink.value.url.trim();
+  if (!name || !url) {
+    ElMessage.warning(t.value.addLinkEmptyName || '请输入名称和链接');
+    return;
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
+  links.value.push({
+    id: `link-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name,
+    url,
+    host: getHost(url),
+    color: linkColors[links.value.length % linkColors.length]
+  });
+  saveLinks();
+  showAddLinkDialog.value = false;
+  newLink.value = { name: '', url: '' };
+  ElMessage.success(t.value.addLinkSuccess || '链接已添加');
+};
+
+const removeLink = (index) => {
+  ElMessageBox.confirm(t.value.deleteConfirm, t.value.cancel, {
+    confirmButtonText: t.value.confirmAdd,
+    cancelButtonText: t.value.cancel,
+    type: 'warning'
+  })
+    .then(() => {
+      links.value.splice(index, 1);
+      saveLinks();
+      ElMessage.success(t.value.linkDeleted || '链接已删除');
+    })
+    .catch(() => {});
+};
+
 // 访客计数和当前时间
 const visitorCount = ref(0);
 const currentTime = ref('');
@@ -629,6 +894,7 @@ onMounted(() => {
   getIP();
   fetchUserVideos();
   fetchWeather();
+  loadLinks();
 });
 
 const t = computed(() => translations[language.value]);
