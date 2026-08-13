@@ -36,6 +36,45 @@
       </div>
     </el-card>
 
+    <!-- 天气卡片 -->
+    <el-card class="mt-4 max-w-md mx-auto">
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <el-icon color="#409eff"><Sunny /></el-icon>
+            <span>{{ t.weatherTitle }}</span>
+          </span>
+          <el-button v-if="weather" size="small" text @click="fetchWeather">
+            <el-icon><Refresh /></el-icon>
+          </el-button>
+        </div>
+      </template>
+      <div v-if="weatherLoading" class="flex items-center justify-center gap-2 py-4 text-gray-500 dark:text-gray-400">
+        <el-icon class="is-loading"><Loading /></el-icon>
+        <span>{{ t.weatherLoading }}</span>
+      </div>
+      <div v-else-if="weatherError" class="text-center py-4 text-red-500 dark:text-red-400">
+        {{ t.weatherError }}
+      </div>
+      <div v-else-if="weather" class="flex items-center justify-between py-1">
+        <div class="flex items-center gap-4">
+          <img :src="weather.icon" :alt="weather.desc" class="w-14 h-14" />
+          <div>
+            <div class="flex items-baseline gap-1">
+              <span class="text-3xl font-bold text-gray-800 dark:text-gray-200">{{ weather.temp }}</span>
+              <span class="text-gray-500 dark:text-gray-400">°C</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ weather.desc }}</p>
+          </div>
+        </div>
+        <div class="text-right text-sm text-gray-500 dark:text-gray-400">
+          <p class="mb-1"><el-icon :size="14"><Location /></el-icon> {{ weather.area }}</p>
+          <p class="mb-1">💧 {{ t.humidity }}: {{ weather.humidity }}%</p>
+          <p>🌬 {{ t.windSpeed }}: {{ weather.wind }} km/h</p>
+        </div>
+      </div>
+    </el-card>
+
     <!-- 访客计数器和时间 -->
     <div class="flex justify-center gap-6 mt-4 text-sm text-gray-500 dark:text-gray-400">
       <div class="flex items-center gap-1">
@@ -125,7 +164,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock } = Icons;
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location } = Icons;
 import { ElIcon, ElButton, ElSelect, ElOption } from 'element-plus';
 import axios from 'axios';
 
@@ -142,6 +181,12 @@ const translations = {
     loadingIP: "Loading IP address...",
     errorIP: "Failed to fetch IP. Please try again.",
     link: "Follow the streamer Thank You Meow",
+
+    weatherTitle: "Weather",
+    weatherLoading: "Fetching weather...",
+    weatherError: "Failed to fetch weather",
+    humidity: "Humidity",
+    windSpeed: "Wind",
 
     loadingVideo: "Loading video...",
     noVideos: "No videos found",
@@ -180,6 +225,12 @@ const translations = {
     errorIP: "获取 IP 失败，请重试。",
     link: "关注主播谢谢喵",
 
+    weatherTitle: "天气",
+    weatherLoading: "天气获取中...",
+    weatherError: "天气获取失败",
+    humidity: "湿度",
+    windSpeed: "风速",
+
     loadingVideo: "正在加载视频...",
     noVideos: "未找到视频",
     videoFetchError: "获取视频失败，请重试",
@@ -216,6 +267,12 @@ const translations = {
     loadingIP: "Chargement de l'adresse IP...",
     errorIP: "Échec de la récupération de l'IP. Veuillez réessayer.",
     link: "Suivez le streamer Merci Miaou",
+
+    weatherTitle: "Météo",
+    weatherLoading: "Chargement de la météo...",
+    weatherError: "Échec de la récupération de la météo",
+    humidity: "Humidité",
+    windSpeed: "Vent",
 
     loadingVideo: "Chargement de la vidéo...",
     noVideos: "Aucune vidéo trouvée",
@@ -255,6 +312,12 @@ const translations = {
     errorIP: "Error al obtener la IP. Por favor, inténtalo de nuevo.",
     link: "Sigue al streamer Gracias Miau",
 
+    weatherTitle: "Clima",
+    weatherLoading: "Cargando clima...",
+    weatherError: "Error al obtener el clima",
+    humidity: "Humedad",
+    windSpeed: "Viento",
+
     loadingVideo: "Cargando video...",
     noVideos: "No se encontraron videos",
     videoFetchError: "Error al cargar el video, por favor inténtelo de nuevo",
@@ -292,6 +355,12 @@ const translations = {
     loadingIP: "Carregando endereço IP...",
     errorIP: "Falha ao obter o IP. Por favor, tente novamente.",
     link: "Siga o streamer Obrigado Miau",
+
+    weatherTitle: "Clima",
+    weatherLoading: "Carregando clima...",
+    weatherError: "Falha ao obter o clima",
+    humidity: "Umidade",
+    windSpeed: "Vento",
 
     loadingVideo: "Carregando vídeo...",
     noVideos: "Nenhum vídeo encontrado",
@@ -331,6 +400,12 @@ const translations = {
     errorIP: "Не удалось получить IP. Пожалуйста, попробуйте снова.",
     link: "Следите за стримером Спасибо Мяу",
 
+    weatherTitle: "Погода",
+    weatherLoading: "Загрузка погоды...",
+    weatherError: "Не удалось получить погоду",
+    humidity: "Влажность",
+    windSpeed: "Ветер",
+
     loadingVideo: "Загрузка видео...",
     noVideos: "Видео не найдены",
     videoFetchError: "Не удалось загрузить видео, попробуйте снова",
@@ -368,6 +443,12 @@ const translations = {
     loadingIP: "جاري تحميل عنوان IP...",
     errorIP: "فشل في جلب عنوان IP. يرجى المحاولة مرة أخرى.",
     link: "تابع الستريمر شكراً مياو",
+
+    weatherTitle: "الطقس",
+    weatherLoading: "جارٍ تحميل الطقس...",
+    weatherError: "فشل في الحصول على الطقس",
+    humidity: "الرطوبة",
+    windSpeed: "الرياح",
 
     loadingVideo: "جاري تحميل الفيديو...",
     noVideos: "لم يتم العثور على فيديوهات",
@@ -428,6 +509,47 @@ const ip = ref('');
 const loading = ref(false);
 const error = ref(false);
 const copied = ref(false);
+
+// 天气
+const weather = ref(null);
+const weatherLoading = ref(false);
+const weatherError = ref(false);
+
+const fetchWeather = async () => {
+  weatherLoading.value = true;
+  weatherError.value = false;
+  try {
+    // 使用 wttr.in 免费天气 API，根据请求来源 IP 自动定位，无需 key
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch('https://wttr.in/?format=j1', {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' }
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) throw new Error('weather request failed');
+    const data = await response.json();
+
+    const current = data.current_condition?.[0];
+    const area = data.nearest_area?.[0];
+    if (!current) throw new Error('no weather data');
+
+    const desc = current.lang_zh?.[0]?.value || current.weatherDesc?.[0]?.value || '';
+    weather.value = {
+      temp: current.temp_C,
+      desc,
+      humidity: current.humidity,
+      wind: current.windspeedKmph,
+      icon: current.weatherIconUrl?.[0]?.value || '',
+      area: area ? `${area.areaName?.[0]?.value || ''} ${area.country?.[0]?.value || ''}`.trim() : ''
+    };
+  } catch {
+    weatherError.value = true;
+  } finally {
+    weatherLoading.value = false;
+  }
+};
 
 // 访客计数和当前时间
 const visitorCount = ref(0);
@@ -506,6 +628,7 @@ const copyIP = async () => {
 onMounted(() => {
   getIP();
   fetchUserVideos();
+  fetchWeather();
 });
 
 const t = computed(() => translations[language.value]);
