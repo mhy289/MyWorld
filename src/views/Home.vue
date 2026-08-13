@@ -144,6 +144,26 @@
       </template>
     </el-dialog>
 
+    <!-- 每日一言卡片 -->
+    <el-card class="mt-4 max-w-md mx-auto">
+      <div class="flex items-start gap-3">
+        <el-icon color="#e6a23c" :size="22"><ChatLineSquare /></el-icon>
+        <div class="flex-1 min-w-0">
+          <div v-if="quoteLoading" class="py-2 text-gray-500 dark:text-gray-400 flex items-center gap-2">
+            <el-icon class="is-loading"><Loading /></el-icon>
+            <span>{{ t.quoteLoading }}</span>
+          </div>
+          <div v-else-if="quote" class="py-1">
+            <p class="text-gray-700 dark:text-gray-300 text-base leading-relaxed">「{{ quote.text }}」</p>
+            <p v-if="quote.from" class="mt-2 text-right text-sm text-gray-400 dark:text-gray-500">—— {{ quote.from }}</p>
+          </div>
+        </div>
+        <el-button size="small" text circle @click="fetchQuote" title="刷新">
+          <el-icon><Refresh /></el-icon>
+        </el-button>
+      </div>
+    </el-card>
+
     <!-- 访客计数器和时间 -->
     <div class="flex justify-center gap-6 mt-4 text-sm text-gray-500 dark:text-gray-400">
       <div class="flex items-center gap-1">
@@ -233,7 +253,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close } = Icons;
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare } = Icons;
 import { ElIcon, ElButton, ElSelect, ElOption, ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
 
@@ -270,6 +290,8 @@ const translations = {
     addLinkEmptyName: "Please enter name and URL",
     addLinkSuccess: "Link added",
     linkDeleted: "Link deleted",
+
+    quoteLoading: "Loading quote...",
 
     loadingVideo: "Loading video...",
     noVideos: "No videos found",
@@ -328,6 +350,8 @@ const translations = {
     addLinkSuccess: "链接已添加",
     linkDeleted: "链接已删除",
 
+    quoteLoading: "一言加载中...",
+
     loadingVideo: "正在加载视频...",
     noVideos: "未找到视频",
     videoFetchError: "获取视频失败，请重试",
@@ -384,6 +408,8 @@ const translations = {
     addLinkEmptyName: "Veuillez saisir le nom et l'URL",
     addLinkSuccess: "Lien ajouté",
     linkDeleted: "Lien supprimé",
+
+    quoteLoading: "Chargement de la citation...",
 
     loadingVideo: "Chargement de la vidéo...",
     noVideos: "Aucune vidéo trouvée",
@@ -443,6 +469,8 @@ const translations = {
     addLinkSuccess: "Enlace agregado",
     linkDeleted: "Enlace eliminado",
 
+    quoteLoading: "Cargando cita...",
+
     loadingVideo: "Cargando video...",
     noVideos: "No se encontraron videos",
     videoFetchError: "Error al cargar el video, por favor inténtelo de nuevo",
@@ -500,6 +528,8 @@ const translations = {
     addLinkEmptyName: "Digite o nome e a URL",
     addLinkSuccess: "Link adicionado",
     linkDeleted: "Link excluído",
+
+    quoteLoading: "Carregando citação...",
 
     loadingVideo: "Carregando vídeo...",
     noVideos: "Nenhum vídeo encontrado",
@@ -559,6 +589,8 @@ const translations = {
     addLinkSuccess: "Ссылка добавлена",
     linkDeleted: "Ссылка удалена",
 
+    quoteLoading: "Загрузка цитаты...",
+
     loadingVideo: "Загрузка видео...",
     noVideos: "Видео не найдены",
     videoFetchError: "Не удалось загрузить видео, попробуйте снова",
@@ -616,6 +648,8 @@ const translations = {
     addLinkEmptyName: "يرجى إدخال الاسم والرابط",
     addLinkSuccess: "تمت إضافة الرابط",
     linkDeleted: "تم حذف الرابط",
+
+    quoteLoading: "جارٍ تحميل الاقتباس...",
 
     loadingVideo: "جاري تحميل الفيديو...",
     noVideos: "لم يتم العثور على فيديوهات",
@@ -816,6 +850,51 @@ const removeLink = (index) => {
     .catch(() => {});
 };
 
+// 每日一言
+const quote = ref(null);
+const quoteLoading = ref(false);
+
+// 本地兜底词库
+const localQuotes = [
+  { text: '世上无难事，只怕有心人。', from: '中国谚语' },
+  { text: '不积跬步，无以至千里。', from: '《荀子·劝学》' },
+  { text: '千里之行，始于足下。', from: '《道德经》' },
+  { text: '学而不思则罔，思而不学则殆。', from: '《论语》' },
+  { text: '天行健，君子以自强不息。', from: '《周易》' },
+  { text: 'Stay hungry, stay foolish.', from: 'Steve Jobs' },
+  { text: 'The only way to do great work is to love what you do.', from: 'Steve Jobs' },
+  { text: 'It always seems impossible until it is done.', from: 'Nelson Mandela' },
+  { text: 'Believe you can and you are halfway there.', from: 'Theodore Roosevelt' },
+  { text: '不要因为走得太远，而忘记为什么出发。', from: '纪伯伦' },
+  { text: '生活就像一盒巧克力，你永远不知道下一颗是什么味道。', from: '《阿甘正传》' },
+  { text: '真正的勇气，是看清生活的真相之后，依然热爱生活。', from: '罗曼·罗兰' }
+];
+
+const fetchQuote = async () => {
+  quoteLoading.value = true;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch('https://v1.hitokoto.cn/?encode=json', {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) throw new Error('quote request failed');
+    const data = await response.json();
+    quote.value = {
+      text: data.hitokoto,
+      from: data.from || ''
+    };
+  } catch {
+    // API 失败时从本地词库随机取一条
+    const item = localQuotes[Math.floor(Math.random() * localQuotes.length)];
+    quote.value = { ...item };
+  } finally {
+    quoteLoading.value = false;
+  }
+};
+
 // 访客计数和当前时间
 const visitorCount = ref(0);
 const currentTime = ref('');
@@ -895,6 +974,7 @@ onMounted(() => {
   fetchUserVideos();
   fetchWeather();
   loadLinks();
+  fetchQuote();
 });
 
 const t = computed(() => translations[language.value]);
