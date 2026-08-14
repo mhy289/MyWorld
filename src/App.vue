@@ -2,10 +2,10 @@
   <div class="app-container">
     <router-link to="/" class="home-link">
       <el-icon><HomeFilled /></el-icon>
-      <span>首页</span>
+      <span>{{ navHome }}</span>
     </router-link>
     <router-link to="/vote" class="vote-link">
-      投票页面
+      {{ navVote }}
     </router-link>
     <div class="theme-toggle" @click="settingsVisible = true" title="设置">
       <el-icon :size="18"><Setting /></el-icon>
@@ -118,13 +118,13 @@ const handleLanguageChange = (event) => {
 
 // ===== 设置面板文案 =====
 const settingsTexts = {
-  en: { title: 'Settings', theme: 'Theme', lang: 'Language', light: 'Light', dark: 'Dark', system: 'System' },
-  zh: { title: '设置', theme: '主题', lang: '语言', light: '亮色', dark: '暗色', system: '跟随系统' },
-  fr: { title: 'Paramètres', theme: 'Thème', lang: 'Langue', light: 'Clair', dark: 'Sombre', system: 'Système' },
-  es: { title: 'Ajustes', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Oscuro', system: 'Sistema' },
-  pt: { title: 'Configurações', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Escuro', system: 'Sistema' },
-  ru: { title: 'Настройки', theme: 'Тема', lang: 'Язык', light: 'Светлая', dark: 'Тёмная', system: 'Системная' },
-  ar: { title: 'الإعدادات', theme: 'المظهر', lang: 'اللغة', light: 'فاتح', dark: 'داكن', system: 'النظام' }
+  en: { title: 'Settings', theme: 'Theme', lang: 'Language', light: 'Light', dark: 'Dark', system: 'System', home: 'Home', vote: 'Vote' },
+  zh: { title: '设置', theme: '主题', lang: '语言', light: '亮色', dark: '暗色', system: '跟随系统', home: '首页', vote: '投票页面' },
+  fr: { title: 'Paramètres', theme: 'Thème', lang: 'Langue', light: 'Clair', dark: 'Sombre', system: 'Système', home: 'Accueil', vote: 'Vote' },
+  es: { title: 'Ajustes', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Oscuro', system: 'Sistema', home: 'Inicio', vote: 'Votar' },
+  pt: { title: 'Configurações', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Escuro', system: 'Sistema', home: 'Início', vote: 'Votar' },
+  ru: { title: 'Настройки', theme: 'Тема', lang: 'Язык', light: 'Светлая', dark: 'Тёмная', system: 'Системная', home: 'Главная', vote: 'Голосование' },
+  ar: { title: 'الإعدادات', theme: 'المظهر', lang: 'اللغة', light: 'فاتح', dark: 'داكن', system: 'النظام', home: 'الرئيسية', vote: 'التصويت' }
 };
 
 const settingsText = computed(() => settingsTexts[appLanguage.value] || settingsTexts.en);
@@ -134,6 +134,8 @@ const langGroupTitle = computed(() => settingsText.value.lang);
 const lightLabel = computed(() => settingsText.value.light);
 const darkLabel = computed(() => settingsText.value.dark);
 const systemLabel = computed(() => settingsText.value.system);
+const navHome = computed(() => settingsText.value.home);
+const navVote = computed(() => settingsText.value.vote);
 
 // ===== 滚动返回顶部 =====
 const handleScroll = () => {
