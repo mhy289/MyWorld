@@ -75,14 +75,22 @@
             <span>{{ t.linksTitle }}</span>
           </span>
           <div class="flex items-center gap-2">
-            <el-radio-group v-model="linksView" size="small" class="link-view-switch">
-              <el-radio-button value="grid">
+            <el-button-group size="small" class="link-view-switch">
+              <el-button
+                :type="linksView === 'grid' ? 'primary' : 'default'"
+                :title="t.linksViewGrid"
+                @click="linksView = 'grid'"
+              >
                 <el-icon><Grid /></el-icon>
-              </el-radio-button>
-              <el-radio-button value="list">
+              </el-button>
+              <el-button
+                :type="linksView === 'list' ? 'primary' : 'default'"
+                :title="t.linksViewList"
+                @click="linksView = 'list'"
+              >
                 <el-icon><Menu /></el-icon>
-              </el-radio-button>
-            </el-radio-group>
+              </el-button>
+            </el-button-group>
             <el-button size="small" type="primary" @click="showAddLinkDialog = true">
               <el-icon><Plus /></el-icon>
               <span>{{ t.addLink }}</span>
@@ -352,6 +360,8 @@ const translations = {
     windSpeed: "Wind",
 
     linksTitle: "Quick Links",
+    linksViewGrid: "Grid view",
+    linksViewList: "List view",
     addLink: "Add Link",
     linkName: "Name",
     linkUrl: "URL",
@@ -417,6 +427,8 @@ const translations = {
     windSpeed: "风速",
 
     linksTitle: "常用链接",
+    linksViewGrid: "瓦片视图",
+    linksViewList: "列表视图",
     addLink: "添加链接",
     linkName: "名称",
     linkUrl: "链接地址",
@@ -482,6 +494,8 @@ const translations = {
     windSpeed: "Vent",
 
     linksTitle: "Liens rapides",
+    linksViewGrid: "Vue en grille",
+    linksViewList: "Vue en liste",
     addLink: "Ajouter un lien",
     linkName: "Nom",
     linkUrl: "URL",
@@ -548,6 +562,8 @@ const translations = {
     windSpeed: "Viento",
 
     linksTitle: "Enlaces rápidos",
+    linksViewGrid: "Vista de cuadrícula",
+    linksViewList: "Vista de lista",
     addLink: "Agregar enlace",
     linkName: "Nombre",
     linkUrl: "URL",
@@ -614,6 +630,8 @@ const translations = {
     windSpeed: "Vento",
 
     linksTitle: "Links rápidos",
+    linksViewGrid: "Vista em grade",
+    linksViewList: "Vista em lista",
     addLink: "Adicionar link",
     linkName: "Nome",
     linkUrl: "URL",
@@ -680,6 +698,8 @@ const translations = {
     windSpeed: "Ветер",
 
     linksTitle: "Быстрые ссылки",
+    linksViewGrid: "Сетка",
+    linksViewList: "Список",
     addLink: "Добавить ссылку",
     linkName: "Название",
     linkUrl: "URL",
@@ -746,6 +766,8 @@ const translations = {
     windSpeed: "الرياح",
 
     linksTitle: "روابط سريعة",
+    linksViewGrid: "عرض شبكي",
+    linksViewList: "عرض قائمة",
     addLink: "إضافة رابط",
     linkName: "الاسم",
     linkUrl: "الرابط",
@@ -1629,14 +1651,6 @@ onUnmounted(() => {
 }
 
 /* 视图切换按钮（图标模式） */
-.link-view-switch :deep(.el-radio-button__inner) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  padding: 0;
-}
-
 .link-view-switch :deep(.el-icon) {
   font-size: 14px;
 }
