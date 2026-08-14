@@ -10,9 +10,11 @@ import axios from 'axios';
 // 基础路径
 axios.defaults.baseURL = "http://localhost:8080"
 
-// 暗色模式初始化
-const savedTheme = localStorage.getItem('theme') || 'light';
-if (savedTheme === 'dark') {
+// 主题初始化（亮色 / 暗色 / 跟随系统）
+const savedMode = localStorage.getItem('theme_mode') || localStorage.getItem('theme') || 'light';
+const applyDark = savedMode === 'dark' ||
+  (savedMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+if (applyDark) {
   document.documentElement.classList.add('dark');
 }
 

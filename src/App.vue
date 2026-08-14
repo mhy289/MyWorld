@@ -7,13 +7,47 @@
     <router-link to="/vote" class="vote-link">
       投票页面
     </router-link>
-    <div class="theme-toggle" @click="toggleTheme" :title="isDark ? '切换亮色模式' : '切换暗色模式'">
-      <el-icon :size="18">
-        <Sunny v-if="isDark" />
-        <Moon v-else />
-      </el-icon>
+    <div class="theme-toggle" @click="settingsVisible = true" title="设置">
+      <el-icon :size="18"><Setting /></el-icon>
     </div>
     <router-view class="router-view" />
+
+    <!-- 设置面板 -->
+    <el-drawer
+      v-model="settingsVisible"
+      :title="settingsTitle"
+      size="340px"
+      :append-to-body="false"
+    >
+      <!-- 主题设置 -->
+      <h4 class="settings-group-title">{{ themeGroupTitle }}</h4>
+      <el-radio-group v-model="themeMode" class="settings-radio-group" @change="applyTheme">
+        <el-radio value="light" class="settings-radio">
+          <el-icon><Sunny /></el-icon>
+          <span>{{ lightLabel }}</span>
+        </el-radio>
+        <el-radio value="dark" class="settings-radio">
+          <el-icon><Moon /></el-icon>
+          <span>{{ darkLabel }}</span>
+        </el-radio>
+        <el-radio value="system" class="settings-radio">
+          <el-icon><Monitor /></el-icon>
+          <span>{{ systemLabel }}</span>
+        </el-radio>
+      </el-radio-group>
+
+      <!-- 语言设置 -->
+      <h4 class="settings-group-title" style="margin-top: 24px">{{ langGroupTitle }}</h4>
+      <el-select v-model="appLanguage" class="w-full" @change="changeLanguage">
+        <el-option label="English" value="en" />
+        <el-option label="中文" value="zh" />
+        <el-option label="Français" value="fr" />
+        <el-option label="Español" value="es" />
+        <el-option label="Português" value="pt" />
+        <el-option label="Русский" value="ru" />
+        <el-option label="العربية" value="ar" />
+      </el-select>
+    </el-drawer>
     <transition name="fade">
       <div
         v-show="showBackTop"
@@ -27,12 +61,77 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { HomeFilled, Top, Sunny, Moon } from '@element-plus/icons-vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { HomeFilled, Top, Sunny, Moon, Monitor, Setting } from '@element-plus/icons-vue';
 
 const showBackTop = ref(false);
-const isDark = ref(false);
+const settingsVisible = ref(false);
 
+// ===== 主题设置（亮色 / 暗色 / 跟随系统）=====
+const LIGHT = 'light';
+const DARK = 'dark';
+const SYSTEM = 'system';
+
+const savedMode = localStorage.getItem('theme_mode') || localStorage.getItem('theme') || LIGHT;
+const themeMode = ref(['light', 'dark'].includes(savedMode) ? savedMode : LIGHT);
+
+const isDark = computed(() => {
+  if (themeMode.value === DARK) return true;
+  if (themeMode.value === SYSTEM) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  return false;
+});
+
+const applyTheme = () => {
+  if (isDark.value) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+  localStorage.setItem('theme_mode', themeMode.value);
+};
+
+// 监听系统主题变化（仅跟随系统模式时生效）
+const systemDarkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+const handleSystemThemeChange = () => {
+  if (themeMode.value === SYSTEM) applyTheme();
+};
+
+// ===== 语言设置 =====
+const appLanguage = ref(localStorage.getItem('app_language') || 'en');
+
+const changeLanguage = (val) => {
+  localStorage.setItem('app_language', val);
+  localStorage.setItem('app_language_manual', '1');
+  window.dispatchEvent(new CustomEvent('app-language-change', { detail: val }));
+};
+
+// 首页下拉切换语言时同步设置面板
+const handleLanguageChange = (event) => {
+  appLanguage.value = event.detail;
+};
+
+// ===== 设置面板文案 =====
+const settingsTexts = {
+  en: { title: 'Settings', theme: 'Theme', lang: 'Language', light: 'Light', dark: 'Dark', system: 'System' },
+  zh: { title: '设置', theme: '主题', lang: '语言', light: '亮色', dark: '暗色', system: '跟随系统' },
+  fr: { title: 'Paramètres', theme: 'Thème', lang: 'Langue', light: 'Clair', dark: 'Sombre', system: 'Système' },
+  es: { title: 'Ajustes', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Oscuro', system: 'Sistema' },
+  pt: { title: 'Configurações', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Escuro', system: 'Sistema' },
+  ru: { title: 'Настройки', theme: 'Тема', lang: 'Язык', light: 'Светлая', dark: 'Тёмная', system: 'Системная' },
+  ar: { title: 'الإعدادات', theme: 'المظهر', lang: 'اللغة', light: 'فاتح', dark: 'داكن', system: 'النظام' }
+};
+
+const settingsText = computed(() => settingsTexts[appLanguage.value] || settingsTexts.en);
+const settingsTitle = computed(() => settingsText.value.title);
+const themeGroupTitle = computed(() => settingsText.value.theme);
+const langGroupTitle = computed(() => settingsText.value.lang);
+const lightLabel = computed(() => settingsText.value.light);
+const darkLabel = computed(() => settingsText.value.dark);
+const systemLabel = computed(() => settingsText.value.system);
+
+// ===== 滚动返回顶部 =====
 const handleScroll = () => {
   showBackTop.value = window.scrollY > 300;
 };
@@ -41,24 +140,17 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-const toggleTheme = () => {
-  isDark.value = !isDark.value;
-  if (isDark.value) {
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  }
-};
-
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
-  isDark.value = document.documentElement.classList.contains('dark');
+  window.addEventListener('app-language-change', handleLanguageChange);
+  systemDarkMedia.addEventListener('change', handleSystemThemeChange);
+  applyTheme();
 });
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener('app-language-change', handleLanguageChange);
+  systemDarkMedia.removeEventListener('change', handleSystemThemeChange);
 });
 </script>
 
@@ -132,6 +224,52 @@ onUnmounted(() => {
 
 .dark .theme-toggle:hover {
   background: #4a4a4b;
+}
+
+.settings-group-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #606266;
+}
+
+.dark .settings-group-title {
+  color: #a8abb2;
+}
+
+.settings-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.settings-radio {
+  width: 100%;
+  height: 40px;
+  margin-right: 0;
+  border-radius: 8px;
+  padding: 0 12px;
+  transition: background-color 0.2s;
+}
+
+.settings-radio:hover {
+  background: #f5f7fa;
+}
+
+.dark .settings-radio:hover {
+  background: #1f1f1f;
+}
+
+.settings-radio :deep(.el-radio__label) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.settings-radio :deep(.el-radio__label .el-icon) {
+  font-size: 16px;
 }
 
 .router-view {

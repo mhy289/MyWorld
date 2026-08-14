@@ -269,7 +269,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, onBeforeUnmount, computed, watch } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
 const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare, TrendCharts } = Icons;
 import { ElIcon, ElButton, ElSelect, ElOption, ElMessage, ElMessageBox, ElRadioGroup, ElRadioButton } from 'element-plus';
@@ -740,7 +740,8 @@ const translations = {
   }
 };
 
-const language = ref('en');
+const language = ref(localStorage.getItem('app_language') || 'en');
+const isLanguageManual = localStorage.getItem('app_language_manual') === '1';
 
 // 根据IP判断地区，设置默认语言
 const detectLanguageByIP = (ipAddress) => {
@@ -1090,8 +1091,11 @@ const getIP = async () => {
     const data = await response.json();
     ip.value = data.ip;
     
-    // 根据IP自动检测语言
-    language.value = detectLanguageByIP(data.ip);
+    // 根据IP自动检测语言（仅用户未手动选择过语言时）
+    if (!isLanguageManual) {
+      language.value = detectLanguageByIP(data.ip);
+      localStorage.setItem('app_language', language.value);
+    }
   } catch (err) {
     error.value = true;
   } finally {
@@ -1130,6 +1134,24 @@ onMounted(() => {
 });
 
 const t = computed(() => translations[language.value]);
+
+// 语言变更同步：首页下拉与设置面板双向同步
+watch(language, (val) => {
+  localStorage.setItem('app_language', val);
+  localStorage.setItem('app_language_manual', '1');
+  window.dispatchEvent(new CustomEvent('app-language-change', { detail: val }));
+});
+
+// 监听设置面板的语言变更
+const handleLanguageChange = (event) => {
+  language.value = event.detail;
+};
+onMounted(() => {
+  window.addEventListener('app-language-change', handleLanguageChange);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('app-language-change', handleLanguageChange);
+});
 
 // 检查后端服务器连接
 const checkServerConnection = async () => {
