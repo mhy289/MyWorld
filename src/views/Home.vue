@@ -1,16 +1,7 @@
 <template>
   <div class="home-container">
     <el-card>
-      <div class="flex justify-between mb-4">
-        <el-select v-model="language" class="w-32">
-          <el-option label="English" value="en" />
-          <el-option label="中文" value="zh" />
-          <el-option label="Français" value="fr" />
-          <el-option label="Español" value="es" />
-          <el-option label="Português" value="pt" />
-          <el-option label="Русский" value="ru" />
-          <el-option label="العربية" value="ar" />
-        </el-select>
+      <div class="flex justify-end mb-4">
         <el-button @click="getIP" :loading="loading">
           {{ t.getIP }}
         </el-button>
@@ -272,7 +263,7 @@
 import { ref, reactive, onMounted, onUnmounted, onBeforeUnmount, computed, watch } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
 const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare, TrendCharts } = Icons;
-import { ElIcon, ElButton, ElSelect, ElOption, ElMessage, ElMessageBox, ElRadioGroup, ElRadioButton } from 'element-plus';
+import { ElIcon, ElButton, ElMessage, ElMessageBox, ElRadioGroup, ElRadioButton } from 'element-plus';
 import * as echarts from 'echarts';
 import axios from 'axios';
 
