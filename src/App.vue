@@ -10,7 +10,11 @@
     <div class="theme-toggle" @click="settingsVisible = true" title="设置">
       <el-icon :size="18"><Setting /></el-icon>
     </div>
-    <router-view class="router-view" />
+    <router-view v-slot="{ Component }" class="router-view">
+      <transition name="page-fade-slide" mode="out-in">
+        <component :is="Component" :key="$route.path" />
+      </transition>
+    </router-view>
 
     <!-- 设置面板 -->
     <el-drawer
@@ -312,5 +316,22 @@ onUnmounted(() => {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(16px);
+}
+
+/* ===== 页面切换动画 ===== */
+.page-fade-slide-enter-active,
+.page-fade-slide-leave-active {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  will-change: opacity, transform;
+}
+
+.page-fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.page-fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-24px);
 }
 </style>
