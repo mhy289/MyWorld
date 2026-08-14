@@ -102,13 +102,12 @@
       <div v-if="links.length === 0" class="text-center py-6 text-gray-500 dark:text-gray-400">
         {{ t.emptyLinks }}
       </div>
-      <template v-else>
-        <!-- 多列瓦片视图 -->
-        <div v-if="linksView === 'grid'" class="flex flex-wrap justify-center gap-3">
+      <!-- 多列瓦片视图 -->
+      <div v-if="links.length > 0 && linksView === 'grid'" class="links-grid">
           <div
             v-for="(item, index) in links"
             :key="item.id"
-            class="link-item group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl w-28 border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
+            class="link-item group relative link-tile rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
             @click="openLink(item.url)"
           >
             <div class="w-12 h-12 shrink-0 mb-1">
@@ -143,12 +142,12 @@
             </el-button>
           </div>
         </div>
-        <!-- 单列列表视图 -->
-        <div v-else class="flex flex-col gap-2">
+      <!-- 单列列表视图 -->
+      <div v-if="links.length > 0 && linksView === 'list'" class="links-list">
           <div
             v-for="(item, index) in links"
             :key="item.id"
-            class="link-item group relative flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
+            class="link-item group relative link-row rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
             @click="openLink(item.url)"
           >
             <div class="w-10 h-10 shrink-0">
@@ -183,7 +182,6 @@
             </el-button>
           </div>
         </div>
-      </template>
     </el-card>
 
     <!-- 添加链接对话框 -->
@@ -1635,6 +1633,42 @@ onUnmounted(() => {
   height: 260px;
 }
 
+/* ===== 常用链接：瓦片 / 列表 两种视图布局（scoped CSS 显式定义，不依赖 Tailwind） ===== */
+
+/* 瓦片视图：居中换行的方形卡片墙 */
+.links-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.link-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  width: 112px;
+  text-align: center;
+}
+
+/* 列表视图：单列横向条目 */
+.links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+
 /* 常用链接卡片 hover 效果 */
 .link-item {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -1654,4 +1688,6 @@ onUnmounted(() => {
 .link-view-switch :deep(.el-icon) {
   font-size: 14px;
 }
+
+
 </style>
