@@ -74,55 +74,108 @@
             <el-icon color="#409eff"><Link /></el-icon>
             <span>{{ t.linksTitle }}</span>
           </span>
-          <el-button size="small" type="primary" @click="showAddLinkDialog = true">
-            <el-icon><Plus /></el-icon>
-            <span>{{ t.addLink }}</span>
-          </el-button>
+          <div class="flex items-center gap-2">
+            <el-radio-group v-model="linksView" size="small" class="link-view-switch">
+              <el-radio-button value="grid">
+                <el-icon><Grid /></el-icon>
+              </el-radio-button>
+              <el-radio-button value="list">
+                <el-icon><Menu /></el-icon>
+              </el-radio-button>
+            </el-radio-group>
+            <el-button size="small" type="primary" @click="showAddLinkDialog = true">
+              <el-icon><Plus /></el-icon>
+              <span>{{ t.addLink }}</span>
+            </el-button>
+          </div>
         </div>
       </template>
 
       <div v-if="links.length === 0" class="text-center py-6 text-gray-500 dark:text-gray-400">
         {{ t.emptyLinks }}
       </div>
-      <div v-else class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-        <div
-          v-for="(item, index) in links"
-          :key="item.id"
-          class="link-item group relative flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
-          @click="openLink(item.url)"
-        >
-          <div class="w-12 h-12 shrink-0">
-            <img
-              v-if="!iconFailed(item)"
-              :src="getFaviconUrl(item.url)"
-              :alt="item.name"
-              class="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-700"
-              loading="lazy"
-              @error="handleIconError(item)"
-            />
-            <div
-              v-else
-              class="flex items-center justify-center w-12 h-12 rounded-xl text-white font-bold text-lg"
-              :style="{ backgroundColor: item.color }"
-            >
-              {{ item.name.charAt(0).toUpperCase() }}
-            </div>
-          </div>
-          <div class="min-w-0 w-full text-center">
-            <p class="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{{ item.name }}</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.host }}</p>
-          </div>
-          <el-button
-            size="small"
-            text
-            circle
-            class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            @click.stop="removeLink(index)"
+      <template v-else>
+        <!-- 多列瓦片视图 -->
+        <div v-if="linksView === 'grid'" class="flex flex-wrap justify-center gap-3">
+          <div
+            v-for="(item, index) in links"
+            :key="item.id"
+            class="link-item group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl w-28 border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
+            @click="openLink(item.url)"
           >
-            <el-icon color="#f56c6c"><Close /></el-icon>
-          </el-button>
+            <div class="w-12 h-12 shrink-0 mb-1">
+              <img
+                v-if="!iconFailed(item)"
+                :src="getFaviconUrl(item.url)"
+                :alt="item.name"
+                class="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-700"
+                loading="lazy"
+                @error="handleIconError(item)"
+              />
+              <div
+                v-else
+                class="flex items-center justify-center w-12 h-12 rounded-xl text-white font-bold text-lg"
+                :style="{ backgroundColor: item.color }"
+              >
+                {{ item.name.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            <div class="min-w-0 w-full text-center">
+              <p class="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{{ item.name }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.host }}</p>
+            </div>
+            <el-button
+              size="small"
+              text
+              circle
+              class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              @click.stop="removeLink(index)"
+            >
+              <el-icon color="#f56c6c"><Close /></el-icon>
+            </el-button>
+          </div>
         </div>
-      </div>
+        <!-- 单列列表视图 -->
+        <div v-else class="flex flex-col gap-2">
+          <div
+            v-for="(item, index) in links"
+            :key="item.id"
+            class="link-item group relative flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
+            @click="openLink(item.url)"
+          >
+            <div class="w-10 h-10 shrink-0">
+              <img
+                v-if="!iconFailed(item)"
+                :src="getFaviconUrl(item.url)"
+                :alt="item.name"
+                class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-700"
+                loading="lazy"
+                @error="handleIconError(item)"
+              />
+              <div
+                v-else
+                class="flex items-center justify-center w-10 h-10 rounded-lg text-white font-bold"
+                :style="{ backgroundColor: item.color }"
+              >
+                {{ item.name.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{{ item.name }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.host }}</p>
+            </div>
+            <el-button
+              size="small"
+              text
+              circle
+              class="opacity-0 group-hover:opacity-100 transition-opacity"
+              @click.stop="removeLink(index)"
+            >
+              <el-icon color="#f56c6c"><Close /></el-icon>
+            </el-button>
+          </div>
+        </div>
+      </template>
     </el-card>
 
     <!-- 添加链接对话框 -->
@@ -273,7 +326,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, onBeforeUnmount, computed, watch } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare, TrendCharts } = Icons;
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare, TrendCharts, Grid, Menu } = Icons;
 import { ElIcon, ElButton, ElMessage, ElMessageBox, ElRadioGroup, ElRadioButton } from 'element-plus';
 import * as echarts from 'echarts';
 import axios from 'axios';
@@ -830,6 +883,12 @@ const defaultLinks = [
 const links = ref([]);
 const showAddLinkDialog = ref(false);
 const newLink = ref({ name: '', url: '' });
+
+// 链接视图：grid = 多列瓦片，list = 单列列表
+const linksView = ref(localStorage.getItem('links_view') || 'grid');
+watch(linksView, (val) => {
+  localStorage.setItem('links_view', val);
+});
 
 // 网站图标：Google favicon 服务，加载失败回退为首字母色块
 const failedIcons = new Set();
@@ -1567,5 +1626,18 @@ onUnmounted(() => {
 
 .dark .link-item:hover {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* 视图切换按钮（图标模式） */
+.link-view-switch :deep(.el-radio-button__inner) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding: 0;
+}
+
+.link-view-switch :deep(.el-icon) {
+  font-size: 14px;
 }
 </style>
