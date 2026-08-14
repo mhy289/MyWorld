@@ -176,6 +176,24 @@
       </div>
     </div>
 
+    <!-- 访问统计图 -->
+    <el-card class="mt-4 max-w-2xl mx-auto">
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <el-icon color="#409eff"><TrendCharts /></el-icon>
+            <span>{{ t.statsTitle }}</span>
+          </span>
+          <el-radio-group v-model="statsRange" size="small" @change="renderStatsChart">
+            <el-radio-button :value="7">{{ t.statsLast7Days }}</el-radio-button>
+            <el-radio-button :value="14">{{ t.statsLast14Days }}</el-radio-button>
+            <el-radio-button :value="30">{{ t.statsLast30Days }}</el-radio-button>
+          </el-radio-group>
+        </div>
+      </template>
+      <div ref="statsChartRef" class="stats-chart"></div>
+    </el-card>
+
     <!-- 装饰元素 -->
     <div class="flex justify-center mt-10">
       <el-icon :size="60" color="#3b82f6" :opacity="0.8">
@@ -253,8 +271,9 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import * as Icons from '@element-plus/icons-vue';
-const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare } = Icons;
-import { ElIcon, ElButton, ElSelect, ElOption, ElMessage, ElMessageBox } from 'element-plus';
+const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare, TrendCharts } = Icons;
+import { ElIcon, ElButton, ElSelect, ElOption, ElMessage, ElMessageBox, ElRadioGroup, ElRadioButton } from 'element-plus';
+import * as echarts from 'echarts';
 import axios from 'axios';
 
 // 多语言配置
@@ -292,6 +311,12 @@ const translations = {
     linkDeleted: "Link deleted",
 
     quoteLoading: "Loading quote...",
+
+    statsTitle: "Visit Statistics",
+    statsLast7Days: "Last 7 Days",
+    statsLast14Days: "Last 14 Days",
+    statsLast30Days: "Last 30 Days",
+    statsVisits: "Visits",
 
     loadingVideo: "Loading video...",
     noVideos: "No videos found",
@@ -352,6 +377,12 @@ const translations = {
 
     quoteLoading: "一言加载中...",
 
+    statsTitle: "访问统计",
+    statsLast7Days: "近 7 天",
+    statsLast14Days: "近 14 天",
+    statsLast30Days: "近 30 天",
+    statsVisits: "访问量",
+
     loadingVideo: "正在加载视频...",
     noVideos: "未找到视频",
     videoFetchError: "获取视频失败，请重试",
@@ -410,6 +441,12 @@ const translations = {
     linkDeleted: "Lien supprimé",
 
     quoteLoading: "Chargement de la citation...",
+
+    statsTitle: "Statistiques de visite",
+    statsLast7Days: "7 derniers jours",
+    statsLast14Days: "14 derniers jours",
+    statsLast30Days: "30 derniers jours",
+    statsVisits: "Visites",
 
     loadingVideo: "Chargement de la vidéo...",
     noVideos: "Aucune vidéo trouvée",
@@ -471,6 +508,12 @@ const translations = {
 
     quoteLoading: "Cargando cita...",
 
+    statsTitle: "Estadísticas de visitas",
+    statsLast7Days: "Últimos 7 días",
+    statsLast14Days: "Últimos 14 días",
+    statsLast30Days: "Últimos 30 días",
+    statsVisits: "Visitas",
+
     loadingVideo: "Cargando video...",
     noVideos: "No se encontraron videos",
     videoFetchError: "Error al cargar el video, por favor inténtelo de nuevo",
@@ -530,6 +573,12 @@ const translations = {
     linkDeleted: "Link excluído",
 
     quoteLoading: "Carregando citação...",
+
+    statsTitle: "Estatísticas de visitas",
+    statsLast7Days: "Últimos 7 dias",
+    statsLast14Days: "Últimos 14 dias",
+    statsLast30Days: "Últimos 30 dias",
+    statsVisits: "Visitas",
 
     loadingVideo: "Carregando vídeo...",
     noVideos: "Nenhum vídeo encontrado",
@@ -591,6 +640,12 @@ const translations = {
 
     quoteLoading: "Загрузка цитаты...",
 
+    statsTitle: "Статистика посещений",
+    statsLast7Days: "Последние 7 дней",
+    statsLast14Days: "Последние 14 дней",
+    statsLast30Days: "Последние 30 дней",
+    statsVisits: "Посещения",
+
     loadingVideo: "Загрузка видео...",
     noVideos: "Видео не найдены",
     videoFetchError: "Не удалось загрузить видео, попробуйте снова",
@@ -650,6 +705,12 @@ const translations = {
     linkDeleted: "تم حذف الرابط",
 
     quoteLoading: "جارٍ تحميل الاقتباس...",
+
+    statsTitle: "إحصائيات الزيارات",
+    statsLast7Days: "آخر 7 أيام",
+    statsLast14Days: "آخر 14 يومًا",
+    statsLast30Days: "آخر 30 يومًا",
+    statsVisits: "الزيارات",
 
     loadingVideo: "جاري تحميل الفيديو...",
     noVideos: "لم يتم العثور على فيديوهات",
@@ -896,14 +957,105 @@ const fetchQuote = async () => {
 };
 
 // 访客计数和当前时间
+const VISIT_STORAGE_KEY = 'visitor_history';
 const visitorCount = ref(0);
 const currentTime = ref('');
+const themeObserver = ref(null);
 
+// 迁移旧数据：早期版本用 visitor_count 存储总访问数
+const migrateVisitorData = () => {
+  const oldTotal = localStorage.getItem('visitor_count');
+  if (oldTotal && !localStorage.getItem(VISIT_STORAGE_KEY)) {
+    const history = {};
+    const today = getDateStr(new Date());
+    history[today] = parseInt(oldTotal) || 0;
+    localStorage.setItem(VISIT_STORAGE_KEY, JSON.stringify(history));
+    localStorage.removeItem('visitor_count');
+  }
+};
+
+// 按日期记录访客数：{ '2026-08-13': 5, '2026-08-14': 3 }
 const updateVisitorCount = () => {
-  const count = localStorage.getItem('visitor_count') || '0';
-  const newCount = parseInt(count) + 1;
-  localStorage.setItem('visitor_count', newCount.toString());
-  visitorCount.value = newCount;
+  try {
+    migrateVisitorData();
+    const history = JSON.parse(localStorage.getItem(VISIT_STORAGE_KEY) || '{}');
+    const today = getDateStr(new Date());
+    history[today] = (history[today] || 0) + 1;
+    localStorage.setItem(VISIT_STORAGE_KEY, JSON.stringify(history));
+    visitorCount.value = Object.values(history).reduce((sum, n) => sum + n, 0);
+    renderStatsChart();
+  } catch (e) {
+    console.warn('记录访问数据失败:', e);
+  }
+};
+
+// 格式化日期为 YYYY-MM-DD
+const getDateStr = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// 访问统计图
+const statsChartRef = ref(null);
+const statsChart = ref(null);
+const statsRange = ref(7);
+
+const renderStatsChart = () => {
+  if (!statsChartRef.value) return;
+  const isDark = document.documentElement.classList.contains('dark');
+  if (!statsChart.value) {
+    statsChart.value = echarts.init(statsChartRef.value, isDark ? 'dark' : undefined);
+  }
+  const history = JSON.parse(localStorage.getItem(VISIT_STORAGE_KEY) || '{}');
+  const days = [];
+  const values = [];
+  const today = new Date();
+  for (let i = statsRange.value - 1; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const key = getDateStr(date);
+    days.push(key.slice(5)); // MM-DD
+    values.push(history[key] || 0);
+  }
+  const textColor = isDark ? '#e5e7eb' : '#333';
+  const splitColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  statsChart.value.setOption({
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params) => {
+        const p = params[0];
+        return `${p.name}<br/>${t.value.statsVisits}: ${p.value}`;
+      }
+    },
+    grid: { left: 40, right: 16, top: 24, bottom: 24 },
+    xAxis: {
+      type: 'category',
+      data: days,
+      axisLabel: { color: textColor }
+    },
+    yAxis: {
+      type: 'value',
+      minInterval: 1,
+      axisLabel: { color: textColor },
+      splitLine: { lineStyle: { color: splitColor } }
+    },
+    series: [{
+      data: values,
+      type: 'line',
+      smooth: true,
+      symbolSize: 6,
+      lineStyle: { color: '#409EFF', width: 2 },
+      itemStyle: { color: '#409EFF' },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
+          { offset: 1, color: 'rgba(64, 158, 255, 0)' }
+        ])
+      }
+    }]
+  });
 };
 
 let timerInterval = null;
@@ -1285,10 +1437,22 @@ onMounted(() => {
   updateVisitorCount();
   updateTime();
   timerInterval = setInterval(updateTime, 1000);
+
+  // 监听主题变化，重新渲染统计图
+  themeObserver.value = new MutationObserver(() => {
+    if (statsChart.value) {
+      statsChart.value.dispose();
+      statsChart.value = null;
+    }
+    renderStatsChart();
+  });
+  themeObserver.value.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 });
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval);
+  if (themeObserver.value) themeObserver.value.disconnect();
+  if (statsChart.value) statsChart.value.dispose();
 });
 </script>
 
@@ -1342,5 +1506,10 @@ onUnmounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stats-chart {
+  width: 100%;
+  height: 260px;
 }
 </style>
