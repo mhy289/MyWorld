@@ -84,20 +84,31 @@
       <div v-if="links.length === 0" class="text-center py-6 text-gray-500 dark:text-gray-400">
         {{ t.emptyLinks }}
       </div>
-      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      <div v-else class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
         <div
           v-for="(item, index) in links"
           :key="item.id"
-          class="link-item group relative flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 hover:shadow-md transition-all cursor-pointer"
+          class="link-item group relative flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 cursor-pointer"
           @click="openLink(item.url)"
         >
-          <div
-            class="flex items-center justify-center w-9 h-9 rounded-lg text-white font-bold text-sm shrink-0"
-            :style="{ backgroundColor: item.color }"
-          >
-            {{ item.name.charAt(0).toUpperCase() }}
+          <div class="w-12 h-12 shrink-0">
+            <img
+              v-if="!iconFailed(item)"
+              :src="getFaviconUrl(item.url)"
+              :alt="item.name"
+              class="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-700"
+              loading="lazy"
+              @error="handleIconError(item)"
+            />
+            <div
+              v-else
+              class="flex items-center justify-center w-12 h-12 rounded-xl text-white font-bold text-lg"
+              :style="{ backgroundColor: item.color }"
+            >
+              {{ item.name.charAt(0).toUpperCase() }}
+            </div>
           </div>
-          <div class="min-w-0 flex-1">
+          <div class="min-w-0 w-full text-center">
             <p class="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{{ item.name }}</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.host }}</p>
           </div>
@@ -105,7 +116,7 @@
             size="small"
             text
             circle
-            class="opacity-0 group-hover:opacity-100 transition-opacity !ml-0"
+            class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
             @click.stop="removeLink(index)"
           >
             <el-icon color="#f56c6c"><Close /></el-icon>
@@ -820,6 +831,23 @@ const links = ref([]);
 const showAddLinkDialog = ref(false);
 const newLink = ref({ name: '', url: '' });
 
+// 网站图标：Google favicon 服务，加载失败回退为首字母色块
+const failedIcons = new Set();
+
+const getFaviconUrl = (url) => {
+  try {
+    const host = new URL(url).host;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
+  } catch {
+    return '';
+  }
+};
+
+const iconFailed = (item) => failedIcons.has(item.id);
+const handleIconError = (item) => {
+  failedIcons.add(item.id);
+};
+
 const getHost = (url) => {
   try {
     return new URL(url).host;
@@ -1524,5 +1552,20 @@ onUnmounted(() => {
 .stats-chart {
   width: 100%;
   height: 260px;
+}
+
+/* 常用链接卡片 hover 效果 */
+.link-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.link-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  border-color: #409eff;
+}
+
+.dark .link-item:hover {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
 }
 </style>
