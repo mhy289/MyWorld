@@ -20,3 +20,12 @@ const app = createApp(App);
 app.use(router);
 app.use(ElementPlus);
 app.mount('#app');
+
+// 注册 Service Worker（仅生产环境，开发环境避免影响 HMR）
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('Service Worker 注册失败:', err);
+    });
+  });
+}
