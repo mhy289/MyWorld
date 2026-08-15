@@ -12,11 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Go backend build artifacts
-backend/myworld-backend
-backend/myworld-backend.exe
-backend/*.exe
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
