@@ -24,8 +24,8 @@
 
 <script>
 import * as echarts from 'echarts';
-import axios from 'axios';
 import { ElMessage } from 'element-plus';
+import { getVotes, submitVote } from '../api';
 
 const STORAGE_KEY = 'local_votes';
 
@@ -62,7 +62,7 @@ export default {
   methods: {
     async checkBackend() {
       try {
-        await axios.get('/votes', { timeout: 3000 });
+        await getVotes();
         this.backendAvailable = true;
       } catch {
         this.backendAvailable = false;
@@ -70,8 +70,7 @@ export default {
     },
     async fetchVotesFromBackend() {
       try {
-        const response = await axios.get('/votes');
-        const data = response.data;
+        const data = await getVotes();
         Object.keys(data).forEach(key => {
           const numKey = Number(key);
           if (this.options.includes(numKey)) {
@@ -149,7 +148,7 @@ export default {
     async vote(option) {
       if (this.backendAvailable) {
         try {
-          await axios.post('/vote', { option }, { timeout: 3000 });
+          await submitVote(option);
           this.voteCounts[option]++;
           this.updateChart();
           ElMessage.success(`已为选项 ${option} 投票（在线），当前票数：${this.voteCounts[option]}`);

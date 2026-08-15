@@ -10,8 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy
+  # ---------- 前端：构建 dist/ 并部署 ----------
+  deploy-frontend:
+    name: Deploy Frontend (Vue)
     runs-on: ubuntu-latest
 
     steps:
@@ -39,3 +40,46 @@ jobs:
           SOURCE: "dist/"
           TARGET: ${{ secrets.DEPLOY_DIR }}
           EXCLUDE: ".git*"
+
+  # ---------- 后端：交叉编译 Go 二进制并部署重启 ----------
+  deploy-backend:
+    name: Deploy Backend (Go)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build backend binary (linux/amd64)
+        run: |
+          cd backend
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o myworld-backend .
+          cd ..
+          mkdir -p backend-dist
+          cp backend/myworld-backend backend-dist/
+
+      - name: Upload backend binary
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USERNAME }}
+          SOURCE: "backend-dist/"
+          TARGET: ${{ secrets.BACKEND_DIR }}
+
+      - name: Restart backend service
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            pkill -f myworld-backend || true
+            cd ${{ secrets.BACKEND_DIR }}
+            chmod +x myworld-backend
+            nohup ./myworld-backend > server.log 2>&1 &

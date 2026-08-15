@@ -335,7 +335,8 @@ import * as Icons from '@element-plus/icons-vue';
 const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDocument, View, Clock, Sunny, Location, Link, Plus, Close, ChatLineSquare, TrendCharts, Grid, Menu } = Icons;
 import { ElIcon, ElButton, ElMessage, ElMessageBox, ElRadioGroup, ElRadioButton } from 'element-plus';
 import * as echarts from 'echarts';
-import axios from 'axios';
+import { request } from '../api/request';
+import { getHealth, getUserVideos } from '../api';
 
 // 多语言配置
 const translations = {
@@ -858,16 +859,10 @@ const fetchWeather = async () => {
   weatherError.value = false;
   try {
     // 使用 wttr.in 免费天气 API，根据请求来源 IP 自动定位，无需 key
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    const response = await fetch('https://wttr.in/?format=j1', {
-      signal: controller.signal,
+    const data = await request.get('https://wttr.in/?format=j1', {
+      timeout: 8000,
       headers: { Accept: 'application/json' }
     });
-    clearTimeout(timeout);
-
-    if (!response.ok) throw new Error('weather request failed');
-    const data = await response.json();
 
     const current = data.current_condition?.[0];
     const area = data.nearest_area?.[0];
@@ -1033,15 +1028,7 @@ const localQuotes = [
 const fetchQuote = async () => {
   quoteLoading.value = true;
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const response = await fetch('https://v1.hitokoto.cn/?encode=json', {
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-
-    if (!response.ok) throw new Error('quote request failed');
-    const data = await response.json();
+    const data = await request.get('https://v1.hitokoto.cn/?encode=json', { timeout: 5000 });
     quote.value = {
       text: data.hitokoto,
       from: data.from || ''
@@ -1185,8 +1172,7 @@ const getIP = async () => {
   loading.value = true;
   error.value = false;
   try {
-    const response = await fetch('https://api.ipify.org?format=json');
-    const data = await response.json();
+    const data = await request.get('https://api.ipify.org?format=json', { timeout: 5000 });
     ip.value = data.ip;
     
     // 根据IP自动检测语言（仅用户未手动选择过语言时）
@@ -1254,10 +1240,8 @@ onBeforeUnmount(() => {
 // 检查后端服务器连接
 const checkServerConnection = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/api/health', {
-      timeout: 3000
-    });
-    console.log('服务器连接正常:', response.data);
+    const data = await getHealth();
+    console.log('服务器连接正常:', data);
     return true;
   } catch (err) {
     console.error('服务器连接失败:', err.message);
@@ -1296,28 +1280,20 @@ const fetchUserVideos = async () => {
     loadingProgress.value = 50;
     
     // 使用后端服务器代理调用B站API获取用户视频列表
-    const response = await axios.get(`http://localhost:8080/api/bilibili/user/videos`, {
-      params: {
-        mid: userId
-      },
-      timeout: 25000,
-      validateStatus: function (status) {
-        return status >= 200 && status < 600;
-      }
-    });
+    const data = await getUserVideos(userId);
 
-    console.log('收到响应:', response.status, response.data);
+    console.log('收到响应:', data);
 
     // 检查B站API返回的错误码
-    if (response.data.code === -799 || response.data.code === -352) {
-      throw new Error(`B站风控限制 (错误码: ${response.data.code})`);
+    if (data.code === -799 || data.code === -352) {
+      throw new Error(`B站风控限制 (错误码: ${data.code})`);
     }
 
     loadingProgress.value = 90;
     loadingMessage.value = t.value.processingData || '正在处理数据...';
 
-    if (response.data.code === 0 && response.data.data?.list?.vlist?.length > 0) {
-      userVideos.value = response.data.data.list.vlist;
+    if (data.code === 0 && data.data?.list?.vlist?.length > 0) {
+      userVideos.value = data.data.list.vlist;
       const randomIndex = Math.floor(Math.random() * userVideos.value.length);
       currentVideo.value = userVideos.value[randomIndex];
       loadingMessage.value = t.value.loadSuccess || '加载成功！';

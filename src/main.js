@@ -5,10 +5,6 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import 'element-plus/theme-chalk/dark/css-vars.css';
 import './assets/styles.css';
-import axios from 'axios';
-
-// 基础路径
-axios.defaults.baseURL = "http://localhost:8080"
 
 // 主题初始化（亮色 / 暗色 / 跟随系统）
 const savedMode = localStorage.getItem('theme_mode') || localStorage.getItem('theme') || 'light';
