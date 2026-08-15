@@ -25,8 +25,21 @@
 
 前端所有后端请求统一封装在 `src/api/`：
 
-- `src/api/request.js` — axios 实例（baseURL 默认 `/api`，可用 `VITE_API_BASE_URL` 环境变量覆盖）+ 拦截器
+- `src/api/request.js` — axios 实例 + 拦截器 + 回退策略
 - `src/api/index.js` — 业务 API（健康检查 / 投票 / B站代理）
+
+## 接口回退策略
+
+本地接口（`/api/*`）连不上时，自动回退到后端对外公开接口（`/public/*`，只读）：
+
+- 仅当**网络连不上**（超时 / 无响应）时触发回退；后端返回业务错误（4xx/5xx）表示服务在线，不回退
+- 投票为写操作，对外接口只读，无回退版本
+- 对外接口默认同源（`/public/*`），异地部署时用 `VITE_PUBLIC_API_BASE_URL` 指定完整地址（如 `https://api.example.com`）
+
+| 环境变量 | 说明 | 默认 |
+| ---- | ---- | ---- |
+| `VITE_API_BASE_URL` | 本地接口 base URL | `/api` |
+| `VITE_PUBLIC_API_BASE_URL` | 对外接口 base URL（含域名） | 空（同源） |
 
 ## 后端接口约定
 
