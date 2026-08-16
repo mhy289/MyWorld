@@ -30,6 +30,15 @@ export const submitVote = (option) => {
   return request.post('/vote', { option }, { timeout: 3000 });
 };
 
+// 访客上报：{ ip, domain, time } 三个字段传给后端（写操作，仅本地接口提供）
+export const reportVisitor = (payload) => {
+  // 本地接口开关关闭时，访客上报无可用接口，直接提示
+  if (!LOCAL_API_ENABLED) {
+    return Promise.reject(new Error('本地接口已关闭，无法上报访客'));
+  }
+  return request.post('/visitor/report', payload, { timeout: 5000 });
+};
+
 // B站用户视频（后端代理，对外接口与本地返回格式一致）
 export const getUserVideos = (mid) =>
   withFallback(

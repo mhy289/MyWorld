@@ -57,6 +57,7 @@
 | POST | `/api/vote` | 投票 `{ "option": <任意值> }` |
 | GET | `/api/votes` | 获取投票数据 |
 | GET | `/api/bilibili/user/videos?mid=xxx` | B站用户视频代理 |
+| POST | `/api/visitor/report` | 访客上报 `{ "ip": "...", "domain": "...", "time": "RFC3339" }` |
 
 ## 快速开始
 

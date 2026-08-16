@@ -336,7 +336,7 @@ const { Cloud, Loading, Warning, Refresh, VideoPlay, VideoCamera, Check, CopyDoc
 import { ElIcon, ElButton, ElMessage, ElMessageBox, ElRadioGroup, ElRadioButton } from 'element-plus';
 import * as echarts from 'echarts';
 import { request } from '../api/request';
-import { getHealth, getUserVideos } from '../api';
+import { getHealth, getUserVideos, reportVisitor } from '../api';
 
 // 多语言配置
 const translations = {
@@ -1184,6 +1184,14 @@ const getIP = async () => {
     error.value = true;
   } finally {
     loading.value = false;
+    // 访客上报：ip（获取失败时为空串兜底）、来源域名、访问时间
+    reportVisitor({
+      ip: ip.value,
+      domain: location.hostname,
+      time: new Date().toISOString()
+    }).catch(() => {
+      // 上报失败不影响页面展示
+    });
   }
 };
 
