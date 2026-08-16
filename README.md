@@ -35,10 +35,18 @@
 - 仅当**网络连不上**（超时 / 无响应）时触发回退；后端返回业务错误（4xx/5xx）表示服务在线，不回退
 - 投票为写操作，对外接口只读，无回退版本
 - 对外接口默认同源（`/public/*`），异地部署时用 `VITE_PUBLIC_API_BASE_URL` 指定完整地址（如 `https://api.example.com`）
+- 可通过开关单独控制本地接口与对外接口：`VITE_ENABLE_LOCAL_API=false` 时数据全部改从对外接口获取（写操作不可用）；`VITE_ENABLE_PUBLIC_API=false` 时关闭回退
+
+## 环境变量（部署时填写）
+
+复制 `.env.example` 为 `.env`（或 `.env.production`）后按需填写，所有变量在构建时注入，修改后需重新构建：
 
 | 环境变量 | 说明 | 默认 |
 | ---- | ---- | ---- |
-| `VITE_API_BASE_URL` | 本地接口 base URL | `/api` |
+| `VITE_BACKEND_URL` | **后端链接**：本地后端根地址（不带 `/api`），同时作为开发代理目标 | 空（生产同源 `/api`，开发代理 `localhost:8080`） |
+| `VITE_ENABLE_LOCAL_API` | **本地接口开关**：`false` 时跳过本地 `/api/*`，数据全部从对外接口获取 | `true` |
+| `VITE_ENABLE_PUBLIC_API` | **对外接口开关**：`false` 时本地连不上也不回退 | `true` |
+| `VITE_API_BASE_URL` | 本地接口 base URL（设置了 `VITE_BACKEND_URL` 时可留空；两者都填时以此为准） | `/api` |
 | `VITE_PUBLIC_API_BASE_URL` | 对外接口 base URL（含域名） | 空（同源） |
 
 ## 后端接口约定
@@ -56,7 +64,10 @@
 # 安装依赖
 npm install
 
-# 启动前端开发服务器（/api 自动代理到本地后端，默认 localhost:8080，可用 BACKEND_URL 覆盖）
+# 复制环境变量示例并按需修改（可先创建 .env 填入 VITE_BACKEND_URL 等）
+# Linux/macOS: cp .env.example .env ；Windows: copy .env.example .env
+
+# 启动前端开发服务器（/api 自动代理到本地后端，默认 localhost:8080，可用 .env 的 VITE_BACKEND_URL 或环境变量 BACKEND_URL 覆盖）
 npm run dev
 
 # 构建生产版本

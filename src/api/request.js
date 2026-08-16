@@ -1,14 +1,28 @@
 import axios from 'axios';
 
-// 后端 API 基础路径：
-// - 开发环境：走 vite proxy（vite.config.js 中 /api -> http://localhost:8080）
-// - 生产环境：同源部署（Go 后端托管前端静态文件）或通过 VITE_API_BASE_URL 指定
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-// 对外公开接口基础路径：
-// - 默认同源（''），即请求当前站点下的 /public/*
-// - 后端异地部署时，通过 VITE_PUBLIC_API_BASE_URL 指定完整地址，如 https://api.example.com
+// ===== 环境变量读取（部署时通过 .env 文件填入）=====
+// 1. VITE_BACKEND_URL       后端链接：本地后端根地址（不带 /api），如 http://localhost:8080
+//                           - 设置后，本地接口 base = VITE_BACKEND_URL + /api
+//                           - 开发环境同时作为 vite proxy 的转发目标（见 vite.config.js）
+//                           - 留空：生产默认同源（/api），开发默认走 proxy 到 localhost:8080
+// 2. VITE_API_BASE_URL      本地接口 base URL（可选，设置了则优先于 VITE_BACKEND_URL）
+// 3. VITE_PUBLIC_API_BASE_URL 对外接口 base URL（可选，默认同源 /public/*）
+// 4. VITE_ENABLE_LOCAL_API  本地接口开关（默认 true）
+// 5. VITE_ENABLE_PUBLIC_API 对外接口开关（默认 true）
+const backendURL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '');
+const baseURL = import.meta.env.VITE_API_BASE_URL || (backendURL ? `${backendURL}/api` : '/api');
 const publicBaseURL = import.meta.env.VITE_PUBLIC_API_BASE_URL || '';
+
+// 布尔开关解析：'false' / '0' / 'no' / 'off' 视为关闭，其余（含空/未设置）为默认值
+function parseBool(value, defaultValue = true) {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  return !['false', '0', 'no', 'off', 'disabled'].includes(String(value).trim().toLowerCase());
+}
+
+// 本地接口开关：false 时跳过本地 /api/* 请求，数据全部从对外接口获取
+export const LOCAL_API_ENABLED = parseBool(import.meta.env.VITE_ENABLE_LOCAL_API);
+// 对外接口开关：false 时本地连不上也不回退，保持原始错误
+export const PUBLIC_API_ENABLED = parseBool(import.meta.env.VITE_ENABLE_PUBLIC_API);
 
 // 附加错误信息并返回 reject（静默失败，是否弹提示由调用方决定）
 function attachErrorMessage(error) {
@@ -57,11 +71,23 @@ attachResponseInterceptor(publicRequest);
 // - error.response 存在 => 后端在线但返回了业务错误（4xx/5xx），不回退，保留原始错误
 // - error.response 不存在（网络错误 / 超时）=> 后端连不上，回退到对外接口
 // - fallback 返回 Promise（可含归一化逻辑）
-export async function withFallback(primary, fallback) {
+// 开关控制：
+// - 本地接口开关关闭（VITE_ENABLE_LOCAL_API=false）：跳过本地请求，直接走对外接口
+// - 对外接口开关关闭（VITE_ENABLE_PUBLIC_API=false）：本地连不上时也不回退
+export async function withFallback(primary, fallback, options = {}) {
+  const { localEnabled = LOCAL_API_ENABLED, publicEnabled = PUBLIC_API_ENABLED } = options;
+  // 本地接口关闭：直接使用对外接口
+  if (!localEnabled) {
+    if (!publicEnabled) {
+      throw new Error('本地接口与对外接口均已关闭，无法请求数据');
+    }
+    return await fallback();
+  }
   try {
     return await primary();
   } catch (err) {
-    if (err.response) throw err;
+    // 后端在线但返回业务错误（4xx/5xx），或对外接口开关关闭：不回退
+    if (err.response || !publicEnabled) throw err;
     return await fallback();
   }
 }

@@ -1,4 +1,4 @@
-import { request, publicRequest, withFallback } from './request';
+import { request, publicRequest, withFallback, LOCAL_API_ENABLED } from './request';
 
 // 业务 API 统一入口：所有对后端（Go 服务）的调用都在这里定义
 // 注：request 的 baseURL 已带 /api 前缀；publicRequest 路径带 /public 前缀
@@ -22,7 +22,13 @@ export const getVotes = () =>
   );
 
 // 写操作：仅本地接口提供，对外为只读，不回退
-export const submitVote = (option) => request.post('/vote', { option }, { timeout: 3000 });
+export const submitVote = (option) => {
+  // 本地接口开关关闭时，投票写操作无可用接口，直接提示
+  if (!LOCAL_API_ENABLED) {
+    return Promise.reject(new Error('本地接口已关闭，无法投票'));
+  }
+  return request.post('/vote', { option }, { timeout: 3000 });
+};
 
 // B站用户视频（后端代理，对外接口与本地返回格式一致）
 export const getUserVideos = (mid) =>
