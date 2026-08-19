@@ -225,13 +225,15 @@ onMounted(() => {
   overflow-y: auto;
   padding: 12px 16px 24px;
   background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Hello World 占位 */
+/* Hello World 占位：占满中间区域并居中 */
 .hello-world {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
