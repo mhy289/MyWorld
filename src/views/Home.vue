@@ -239,6 +239,26 @@ watch(
   background: #ffffff;
 }
 
+/* 渲染区域融入背景：去掉组件卡片的外边框、阴影与背景 */
+.content-area :deep(.el-card) {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.content-area :deep(.el-card__header) {
+  border-bottom: none;
+}
+
+.content-area :deep(.about-section) {
+  border: none;
+  background: transparent;
+}
+
+.content-area :deep(.chart-container) {
+  box-shadow: none;
+}
+
 /* Hello World 占位：占满中间区域并居中 */
 .hello-world {
   min-height: 100%;
