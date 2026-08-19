@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { modules, findCategory } from '../config/modules';
 import { useI18n, language } from '../composables/useI18n';
@@ -106,9 +106,11 @@ const saveState = () => {
   } catch (e) {
     console.warn('保存模块位置失败:', e);
   }
-  router.replace({
-    query: { cat: currentCat.value, item: currentItem.value }
-  }).catch(() => {});
+  // 空值不写入 query，保持 URL 干净（如返回主页时为 /）
+  const query = {};
+  if (currentCat.value) query.cat = currentCat.value;
+  if (currentItem.value) query.item = currentItem.value;
+  router.replace({ query }).catch(() => {});
 };
 
 const handleCatChange = () => {
@@ -146,6 +148,16 @@ onMounted(() => {
   currentCat.value = pos.cat;
   currentItem.value = pos.item;
 });
+
+// 路由 query 变化时同步状态（点击左上角 Logo 返回主页等场景）
+watch(
+  () => route.query,
+  () => {
+    const pos = resolvePosition();
+    currentCat.value = pos.cat;
+    currentItem.value = pos.item;
+  }
+);
 </script>
 
 <style scoped>
