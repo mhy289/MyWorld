@@ -23,21 +23,18 @@
     <!-- 主体：左侧子项下拉 + 中间渲染区 -->
     <div class="main-area">
       <aside class="side-bar">
-        <div class="side-bar-inner">
-          <el-select
-            v-model="currentItem"
-            class="item-select"
-            :placeholder="t.itemPlaceholder"
-            @change="handleItemChange"
+        <div class="side-cat-title">{{ currentCatLabel }}</div>
+        <ul class="side-list">
+          <li
+            v-for="item in currentCatItems"
+            :key="item.key"
+            class="side-item"
+            :class="{ active: item.key === currentItem }"
+            @click="handleSideItemClick(item)"
           >
-            <el-option
-              v-for="item in currentCatItems"
-              :key="item.key"
-              :value="item.key"
-              :label="item.label[lang] || item.key"
-            />
-          </el-select>
-        </div>
+            <span class="side-item-label">{{ item.label[lang] || item.key }}</span>
+          </li>
+        </ul>
       </aside>
 
       <main class="content-area">
@@ -88,6 +85,15 @@ const currentItem = ref('');
 const STORAGE_KEY = 'home_module';
 
 const currentCatItems = computed(() => findCategory(currentCat.value)?.items || []);
+
+// 左侧分类标题（当前分类名）
+const currentCatLabel = computed(() => findCategory(currentCat.value)?.label[lang.value] || '');
+
+// 点击左侧子项：切换模块
+const handleSideItemClick = (item) => {
+  currentItem.value = item.key;
+  handleItemChange();
+};
 
 const currentComponent = computed(() => {
   const cat = findCategory(currentCat.value);
@@ -211,23 +217,69 @@ watch(
   min-height: 0;
 }
 
-/* 左侧栏 */
+/* 左侧栏：子项纵向排列，过长自动滚动 */
 .side-bar {
   width: 240px;
   flex-shrink: 0;
   background: #eef1f6;
   border-right: 1px solid #d4dae3;
-  padding: 12px 16px;
+  padding: 12px 12px 16px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
-.side-bar-inner {
-  position: sticky;
-  top: 12px;
+/* 自定义滚动条，融入底色 */
+.side-bar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.item-select {
-  width: 100%;
+.side-bar::-webkit-scrollbar-thumb {
+  background: rgba(144, 147, 153, 0.35);
+  border-radius: 3px;
+}
+
+.side-bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.side-cat-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #606266;
+  letter-spacing: 1px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+.side-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.side-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.4;
+  user-select: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.side-item:hover {
+  background: rgba(64, 158, 255, 0.08);
+  color: #409eff;
+}
+
+.side-item.active {
+  background: #409eff;
+  color: #ffffff;
+  font-weight: 500;
 }
 
 /* 中间内容区 */
@@ -297,6 +349,23 @@ watch(
   border-right-color: #3a3c42;
 }
 
+.dark .side-cat-title {
+  color: #a8abb2;
+}
+
+.dark .side-item {
+  color: #c0c4cc;
+}
+
+.dark .side-item:hover {
+  background: rgba(64, 158, 255, 0.15);
+  color: #7fb5ff;
+}
+
+.dark .side-bar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .dark .content-area {
   background: #1a1b1f;
 }
@@ -321,7 +390,7 @@ watch(
   transform: translateY(-10px);
 }
 
-/* 窄屏适配：左侧栏隐藏，子项下拉移到顶部 */
+/* 窄屏适配：左侧栏移到顶部，子项横向排列换行 */
 @media (max-width: 768px) {
   .main-area {
     flex-direction: column;
@@ -331,15 +400,25 @@ watch(
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #d4dae3;
-    padding: 8px 16px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    max-height: 148px;
+  }
+
+  .side-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .side-item {
+    padding: 6px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
   }
 
   .dark .side-bar {
     border-bottom-color: #3a3c42;
-  }
-
-  .side-bar-inner {
-    position: static;
   }
 }
 </style>
