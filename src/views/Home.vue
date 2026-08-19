@@ -53,6 +53,21 @@
         </div>
       </main>
     </div>
+
+    <!-- 底部：关于我的信息、链接、ICP 备案 -->
+    <footer class="site-footer">
+      <span class="footer-copy">© {{ year }} MyWorld · {{ t.footerRights }}</span>
+      <div class="footer-links">
+        <a
+          v-for="link in footerLinks"
+          :key="link.label"
+          :href="link.url"
+          target="_blank"
+          rel="noopener noreferrer"
+        >{{ link.label }}</a>
+      </div>
+      <span class="footer-icp">{{ icp }}</span>
+    </footer>
   </div>
 </template>
 
@@ -64,17 +79,26 @@ import { useI18n, language } from '../composables/useI18n';
 import { recordVisit } from '../composables/useVisitor';
 
 const translations = {
-  en: { categoryPlaceholder: 'Select category', itemPlaceholder: 'Select module', homeTitle: 'Home', helloSub: 'Home page under construction' },
-  zh: { categoryPlaceholder: '选择分类', itemPlaceholder: '选择模块', homeTitle: '返回主页', helloSub: '首页建设中' },
-  fr: { categoryPlaceholder: 'Choisir une catégorie', itemPlaceholder: 'Choisir un module', homeTitle: 'Accueil', helloSub: "Page d'accueil en construction" },
-  es: { categoryPlaceholder: 'Seleccionar categoría', itemPlaceholder: 'Seleccionar módulo', homeTitle: 'Inicio', helloSub: 'Página de inicio en construcción' },
-  pt: { categoryPlaceholder: 'Selecionar categoria', itemPlaceholder: 'Selecionar módulo', homeTitle: 'Início', helloSub: 'Página inicial em construção' },
-  ru: { categoryPlaceholder: 'Выберите категорию', itemPlaceholder: 'Выберите модуль', homeTitle: 'Главная', helloSub: 'Страница в разработке' },
-  ar: { categoryPlaceholder: 'اختر الفئة', itemPlaceholder: 'اختر الوحدة', homeTitle: 'الرئيسية', helloSub: 'الصفحة الرئيسية قيد الإنشاء' }
+  en: { categoryPlaceholder: 'Select category', itemPlaceholder: 'Select module', homeTitle: 'Home', helloSub: 'Home page under construction', footerRights: 'All rights reserved.' },
+  zh: { categoryPlaceholder: '选择分类', itemPlaceholder: '选择模块', homeTitle: '返回主页', helloSub: '首页建设中', footerRights: '保留所有权利。' },
+  fr: { categoryPlaceholder: 'Choisir une catégorie', itemPlaceholder: 'Choisir un module', homeTitle: 'Accueil', helloSub: "Page d'accueil en construction", footerRights: 'Tous droits réservés.' },
+  es: { categoryPlaceholder: 'Seleccionar categoría', itemPlaceholder: 'Seleccionar módulo', homeTitle: 'Inicio', helloSub: 'Página de inicio en construcción', footerRights: 'Todos los derechos reservados.' },
+  pt: { categoryPlaceholder: 'Selecionar categoria', itemPlaceholder: 'Selecionar módulo', homeTitle: 'Início', helloSub: 'Página inicial em construção', footerRights: 'Todos os direitos reservados.' },
+  ru: { categoryPlaceholder: 'Выберите категорию', itemPlaceholder: 'Выберите модуль', homeTitle: 'Главная', helloSub: 'Страница в разработке', footerRights: 'Все права защищены.' },
+  ar: { categoryPlaceholder: 'اختر الفئة', itemPlaceholder: 'اختر الوحدة', homeTitle: 'الرئيسية', helloSub: 'الصفحة الرئيسية قيد الإنشاء', footerRights: 'جميع الحقوق محفوظة.' }
 };
 const { t } = useI18n(translations);
 
 const route = useRoute();
+
+// ===== 底部页脚配置（按需修改为自己的信息） =====
+const year = new Date().getFullYear();
+const footerLinks = [
+  { label: 'GitHub', url: 'https://github.com/' },
+  { label: 'Email', url: 'mailto:admin@example.com' },
+  { label: 'Blog', url: 'https://example.com' }
+];
+const icp = '京ICP备00000000号-1';
 const router = useRouter();
 
 const lang = computed(() => language.value);
@@ -282,12 +306,12 @@ watch(
   font-weight: 500;
 }
 
-/* 中间内容区 */
+/* 中间内容区：模块内容铺满，紧贴顶部与边缘，与背景融为一体 */
 .content-area {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding: 12px 16px 24px;
+  padding: 0;
   background: #ffffff;
 }
 
@@ -314,11 +338,13 @@ watch(
 /* Hello World 占位：占满中间区域并居中 */
 .hello-world {
   min-height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
+  padding: 24px 16px;
 }
 
 .hello-title {
@@ -372,6 +398,48 @@ watch(
 
 .dark .hello-sub {
   color: #8a8d94;
+}
+
+/* ===== 底部页脚 ===== */
+.site-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #606266;
+  background: #e2e7f0;
+  border-top: 1px solid #d4dae3;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-links a {
+  color: #409eff;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.footer-links a:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.dark .site-footer {
+  background: #2c2e34;
+  border-top-color: #3a3c42;
+  color: #a8abb2;
+}
+
+.dark .footer-links a {
+  color: #7fb5ff;
 }
 
 /* 模块切换动画 */
