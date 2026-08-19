@@ -140,6 +140,9 @@ const saveState = () => {
   if (currentCat.value) query.cat = currentCat.value;
   if (currentItem.value) query.item = currentItem.value;
   router.replace({ query }).catch(() => {});
+
+  // 切换模块后回到页面顶部
+  window.scrollTo({ top: 0 });
 };
 
 const handleCatChange = () => {
@@ -185,27 +188,32 @@ watch(
     const pos = resolvePosition();
     currentCat.value = pos.cat;
     currentItem.value = pos.item;
+    window.scrollTo({ top: 0 });
   }
 );
 </script>
 
 <style scoped>
-/* ===== 整体布局：顶部/页脚横跨全宽，左侧栏与内容区在中间一行 ===== */
+/* ===== 整体布局：页面整体滚动，顶部/侧栏吸顶，页脚在文档流最后 ===== */
 .home-shell {
-  height: 100vh;
+  min-height: 100vh;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 240px minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
     'top top'
     'side main'
     'footer footer';
+  --header-h: 61px; /* 顶部栏实际高度（60px 内容 + 1px 底边框） */
 }
 
-/* ===== 顶部栏：Logo + 分类下拉 ===== */
+/* ===== 顶部栏：Logo + 分类下拉，滚动时吸顶 ===== */
 .top-bar {
   grid-area: top;
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -239,9 +247,13 @@ watch(
   width: 280px;
 }
 
-/* ===== 左侧栏：子项纵向排列，过长自动滚动 ===== */
+/* ===== 左侧栏：子项纵向排列，滚动时吸顶，过长自动滚动 ===== */
 .side-bar {
   grid-area: side;
+  position: sticky;
+  top: var(--header-h);
+  align-self: start;
+  max-height: calc(100vh - var(--header-h));
   min-width: 0;
   background: #eef1f6;
   border-right: 1px solid #d4dae3;
@@ -304,11 +316,12 @@ watch(
   font-weight: 500;
 }
 
-/* 中间内容区：模块内容铺满，紧贴顶部与边缘，与背景融为一体 */
+/* 中间内容区：内容高度自适应，随页面滚动，页脚在文章末尾 */
 .content-area {
   grid-area: main;
   min-width: 0;
-  overflow-y: auto;
+  /* 内容不满一屏时撑满剩余视口 */
+  min-height: calc(100vh - var(--header-h));
   padding: 0;
   background: #ffffff;
 }

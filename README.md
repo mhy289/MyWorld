@@ -4,7 +4,10 @@
 
 ## 功能
 
+- **模块化首页**：顶部分类 + 左侧子项 + 中间渲染，选择状态自动记忆（URL + localStorage）
 - **IP 展示**：自动获取并展示访客公网 IP
+- **访客统计**：访客 IP / 域名 / 时间上报后端
+- **博客 · 开发历程**：Markdown 文件驱动，按日期自动归档渲染
 - **多语言支持**：7 种语言（英/中/法/西/葡/俄/阿），根据 IP 地区自动切换
 - **B站视频嵌入**：随机展示 B站 用户视频，支持内嵌播放（经后端代理）
 - **投票系统**：1-10 数字投票，ECharts 实时统计图表
@@ -13,6 +16,7 @@
 ## 技术栈
 
 - Vue 3 (Composition API) + Vite + Vue Router (Hash) + Element Plus + ECharts + Axios
+- Markdown 渲染：自研轻量渲染器（零依赖、先转义防 XSS），源码见 `src/utils/markdown.js`
 
 ## 架构
 
@@ -82,14 +86,21 @@ src/
 ├── api/               # 统一 API 层（axios 封装）
 │   ├── request.js
 │   └── index.js
-├── main.js           # 应用入口
-├── App.vue           # 根组件
-├── router/index.js   # 路由配置
-├── assets/styles.css # 全局样式
+├── main.js            # 应用入口
+├── App.vue            # 根组件（主题/设置）
+├── router/index.js    # 路由配置
+├── assets/styles.css  # 全局样式
+├── config/modules.js  # 首页分类与模块配置
+├── composables/       # 共享状态（useI18n 语言、useVisitor 访客统计）
+├── content/devlog/    # 开发历程 Markdown 文件（文件名即日期）
+├── utils/markdown.js  # 轻量 Markdown 渲染器（零依赖、防 XSS）
+├── components/home/   # 首页模块组件（IP/天气/链接/语录/时间/统计/视频/投票/开发历程）
 └── views/
-    ├── Home.vue      # 首页
-    └── VotePage.vue  # 投票页面
+    ├── Home.vue       # 首页：顶部 + 左侧 + 中间三区框架
+    └── NotFound.vue   # 404 页面
 ```
+
+> 开发历程：在 `src/content/devlog/` 下新增 `YYYY-MM-DD.md` 文件即会自动展示（按日期倒序），无需改代码。
 
 ## 部署
 
