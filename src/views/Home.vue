@@ -1,6 +1,22 @@
 <template>
   <div class="home-shell">
-    <!-- 顶部：左上角 Logo（点击返回主页）+ 分类下拉 -->
+    <!-- 左侧栏：贯穿整列，上下无缝隙 -->
+    <aside class="side-bar">
+      <div class="side-cat-title">{{ currentCatLabel }}</div>
+      <ul class="side-list">
+        <li
+          v-for="item in currentCatItems"
+          :key="item.key"
+          class="side-item"
+          :class="{ active: item.key === currentItem }"
+          @click="handleSideItemClick(item)"
+        >
+          <span class="side-item-label">{{ item.label[lang] || item.key }}</span>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- 顶部：Logo + 分类下拉 -->
     <div class="top-bar">
       <router-link to="/" class="logo-link" :title="t.homeTitle">
         <img src="/icons/icon-192.png" alt="logo" class="logo-img" />
@@ -20,39 +36,22 @@
       </el-select>
     </div>
 
-    <!-- 主体：左侧子项下拉 + 中间渲染区 -->
-    <div class="main-area">
-      <aside class="side-bar">
-        <div class="side-cat-title">{{ currentCatLabel }}</div>
-        <ul class="side-list">
-          <li
-            v-for="item in currentCatItems"
-            :key="item.key"
-            class="side-item"
-            :class="{ active: item.key === currentItem }"
-            @click="handleSideItemClick(item)"
-          >
-            <span class="side-item-label">{{ item.label[lang] || item.key }}</span>
-          </li>
-        </ul>
-      </aside>
-
-      <main class="content-area">
-        <!-- 选中模块：渲染对应组件 -->
-        <template v-if="hasSelection">
-          <transition name="module-fade" mode="out-in">
-            <KeepAlive>
-              <component :is="currentComponent" :key="currentComponentKey" />
-            </KeepAlive>
-          </transition>
-        </template>
-        <!-- 未选择模块：首页暂时显示 Hello World -->
-        <div v-else class="hello-world">
-          <h1 class="hello-title">Hello World</h1>
-          <p class="hello-sub">{{ t.helloSub }}</p>
-        </div>
-      </main>
-    </div>
+    <!-- 中间渲染区 -->
+    <main class="content-area">
+      <!-- 选中模块：渲染对应组件 -->
+      <template v-if="hasSelection">
+        <transition name="module-fade" mode="out-in">
+          <KeepAlive>
+            <component :is="currentComponent" :key="currentComponentKey" />
+          </KeepAlive>
+        </transition>
+      </template>
+      <!-- 未选择模块：首页暂时显示 Hello World -->
+      <div v-else class="hello-world">
+        <h1 class="hello-title">Hello World</h1>
+        <p class="hello-sub">{{ t.helloSub }}</p>
+      </div>
+    </main>
 
     <!-- 底部：关于我的信息、链接、ICP 备案 -->
     <footer class="site-footer">
@@ -191,21 +190,27 @@ watch(
 </script>
 
 <style scoped>
+/* ===== 整体布局：顶部/页脚横跨全宽，左侧栏与内容区在中间一行 ===== */
 .home-shell {
   height: 100vh;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'top top'
+    'side main'
+    'footer footer';
 }
 
-/* ===== 顶部栏：左上角 Logo + 分类下拉 ===== */
+/* ===== 顶部栏：Logo + 分类下拉 ===== */
 .top-bar {
-  flex-shrink: 0;
+  grid-area: top;
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 10px 16px;
-  background: #e2e7f0;
+  background: #dde3ee;
   border-bottom: 1px solid #d4dae3;
 }
 
@@ -234,17 +239,10 @@ watch(
   width: 280px;
 }
 
-/* ===== 主体 ===== */
-.main-area {
-  flex: 1;
-  display: flex;
-  min-height: 0;
-}
-
-/* 左侧栏：子项纵向排列，过长自动滚动 */
+/* ===== 左侧栏：子项纵向排列，过长自动滚动 ===== */
 .side-bar {
-  width: 240px;
-  flex-shrink: 0;
+  grid-area: side;
+  min-width: 0;
   background: #eef1f6;
   border-right: 1px solid #d4dae3;
   padding: 12px 12px 16px;
@@ -308,7 +306,7 @@ watch(
 
 /* 中间内容区：模块内容铺满，紧贴顶部与边缘，与背景融为一体 */
 .content-area {
-  flex: 1;
+  grid-area: main;
   min-width: 0;
   overflow-y: auto;
   padding: 0;
@@ -366,7 +364,7 @@ watch(
 
 /* ===== 暗色主题：三区颜色区分 ===== */
 .dark .top-bar {
-  background: #2c2e34;
+  background: #30323a;
   border-bottom-color: #3a3c42;
 }
 
@@ -402,7 +400,7 @@ watch(
 
 /* ===== 底部页脚 ===== */
 .site-footer {
-  flex-shrink: 0;
+  grid-area: footer;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -411,7 +409,7 @@ watch(
   padding: 10px 16px;
   font-size: 13px;
   color: #606266;
-  background: #e2e7f0;
+  background: #dde3ee;
   border-top: 1px solid #d4dae3;
 }
 
@@ -433,7 +431,7 @@ watch(
 }
 
 .dark .site-footer {
-  background: #2c2e34;
+  background: #30323a;
   border-top-color: #3a3c42;
   color: #a8abb2;
 }
@@ -458,14 +456,19 @@ watch(
   transform: translateY(-10px);
 }
 
-/* 窄屏适配：左侧栏移到顶部，子项横向排列换行 */
+/* 窄屏适配：单列布局，侧栏移到顶部，子项横向排列换行 */
 @media (max-width: 768px) {
-  .main-area {
-    flex-direction: column;
+  .home-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      'top'
+      'side'
+      'main'
+      'footer';
   }
 
   .side-bar {
-    width: 100%;
     border-right: none;
     border-bottom: 1px solid #d4dae3;
     padding: 8px 12px;
