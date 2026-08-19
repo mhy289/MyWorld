@@ -6,6 +6,7 @@ import TimeCard from '../components/home/TimeCard.vue';
 import StatsCard from '../components/home/StatsCard.vue';
 import VideoCard from '../components/home/VideoCard.vue';
 import VoteCard from '../components/home/VoteCard.vue';
+import DevLogCard from '../components/home/DevLogCard.vue';
 
 // 两级导航配置：cat = 顶部分类，item = 左侧子项
 // label 为多语言对象，key 对应 en/zh/fr/es/pt/ru/ar
@@ -46,6 +47,13 @@ export const modules = [
     label: { en: 'Interaction', zh: '互动', fr: 'Interaction', es: 'Interacción', pt: 'Interação', ru: 'Взаимодействие', ar: 'تفاعل' },
     items: [
       { key: 'vote', label: { en: 'Vote', zh: '投票', fr: 'Vote', es: 'Votar', pt: 'Votar', ru: 'Голосование', ar: 'تصويت' }, component: VoteCard }
+    ]
+  },
+  {
+    key: 'blog',
+    label: { en: 'Blog', zh: '博客', fr: 'Blog', es: 'Blog', pt: 'Blog', ru: 'Блог', ar: 'مدونة' },
+    items: [
+      { key: 'devlog', label: { en: 'Development Journey', zh: '开发历程', fr: 'Parcours de développement', es: 'Trayectoria de desarrollo', pt: 'Jornada de desenvolvimento', ru: 'Путь разработки', ar: 'مسار التطوير' }, component: DevLogCard }
     ]
   }
 ];
