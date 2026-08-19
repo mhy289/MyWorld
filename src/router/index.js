@@ -7,9 +7,9 @@ const routes = [
     component: () => import('../views/Home.vue')
   },
   {
+    // 投票已并入首页「互动」分类，旧链接重定向到对应模块
     path: '/vote',
-    name: 'Vote',
-    component: () => import('../views/VotePage.vue')
+    redirect: { path: '/', query: { cat: 'interact', item: 'vote' } }
   },
   {
     path: '/:pathMatch(.*)*',

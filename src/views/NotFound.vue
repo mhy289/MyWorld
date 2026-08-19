@@ -22,6 +22,7 @@ import { HomeFilled } from '@element-plus/icons-vue';
   justify-content: center;
   align-items: center;
   min-height: 60vh;
+  padding-top: 80px;
   text-align: center;
 }
 

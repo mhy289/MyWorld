@@ -4,9 +4,6 @@
       <el-icon><HomeFilled /></el-icon>
       <span>{{ navHome }}</span>
     </router-link>
-    <router-link to="/vote" class="vote-link">
-      {{ navVote }}
-    </router-link>
     <div class="theme-toggle" @click="settingsVisible = true" title="设置">
       <el-icon :size="18"><Setting /></el-icon>
     </div>
@@ -42,7 +39,7 @@
 
       <!-- 语言设置 -->
       <h4 class="settings-group-title" style="margin-top: 24px">{{ langGroupTitle }}</h4>
-      <el-select v-model="appLanguage" class="w-full" @change="changeLanguage">
+      <el-select v-model="language" class="w-full" @change="changeLanguage">
         <el-option label="English" value="en" />
         <el-option label="中文" value="zh" />
         <el-option label="Français" value="fr" />
@@ -67,6 +64,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { HomeFilled, Top, Sunny, Moon, Monitor, Setting } from '@element-plus/icons-vue';
+import { language, setLanguage } from './composables/useI18n';
 
 const showBackTop = ref(false);
 const settingsVisible = ref(false);
@@ -102,32 +100,23 @@ const handleSystemThemeChange = () => {
   if (themeMode.value === SYSTEM) applyTheme();
 };
 
-// ===== 语言设置 =====
-const appLanguage = ref(localStorage.getItem('app_language') || 'en');
-
+// ===== 语言设置（共享状态，与首页各模块联动）=====
 const changeLanguage = (val) => {
-  localStorage.setItem('app_language', val);
-  localStorage.setItem('app_language_manual', '1');
-  window.dispatchEvent(new CustomEvent('app-language-change', { detail: val }));
-};
-
-// 首页下拉切换语言时同步设置面板
-const handleLanguageChange = (event) => {
-  appLanguage.value = event.detail;
+  setLanguage(val);
 };
 
 // ===== 设置面板文案 =====
 const settingsTexts = {
-  en: { title: 'Settings', theme: 'Theme', lang: 'Language', light: 'Light', dark: 'Dark', system: 'System', home: 'Home', vote: 'Vote' },
-  zh: { title: '设置', theme: '主题', lang: '语言', light: '亮色', dark: '暗色', system: '跟随系统', home: '首页', vote: '投票页面' },
-  fr: { title: 'Paramètres', theme: 'Thème', lang: 'Langue', light: 'Clair', dark: 'Sombre', system: 'Système', home: 'Accueil', vote: 'Vote' },
-  es: { title: 'Ajustes', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Oscuro', system: 'Sistema', home: 'Inicio', vote: 'Votar' },
-  pt: { title: 'Configurações', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Escuro', system: 'Sistema', home: 'Início', vote: 'Votar' },
-  ru: { title: 'Настройки', theme: 'Тема', lang: 'Язык', light: 'Светлая', dark: 'Тёмная', system: 'Системная', home: 'Главная', vote: 'Голосование' },
-  ar: { title: 'الإعدادات', theme: 'المظهر', lang: 'اللغة', light: 'فاتح', dark: 'داكن', system: 'النظام', home: 'الرئيسية', vote: 'التصويت' }
+  en: { title: 'Settings', theme: 'Theme', lang: 'Language', light: 'Light', dark: 'Dark', system: 'System', home: 'Home' },
+  zh: { title: '设置', theme: '主题', lang: '语言', light: '亮色', dark: '暗色', system: '跟随系统', home: '首页' },
+  fr: { title: 'Paramètres', theme: 'Thème', lang: 'Langue', light: 'Clair', dark: 'Sombre', system: 'Système', home: 'Accueil' },
+  es: { title: 'Ajustes', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Oscuro', system: 'Sistema', home: 'Inicio' },
+  pt: { title: 'Configurações', theme: 'Tema', lang: 'Idioma', light: 'Claro', dark: 'Escuro', system: 'Sistema', home: 'Início' },
+  ru: { title: 'Настройки', theme: 'Тема', lang: 'Язык', light: 'Светлая', dark: 'Тёмная', system: 'Системная', home: 'Главная' },
+  ar: { title: 'الإعدادات', theme: 'المظهر', lang: 'اللغة', light: 'فاتح', dark: 'داكن', system: 'النظام', home: 'الرئيسية' }
 };
 
-const settingsText = computed(() => settingsTexts[appLanguage.value] || settingsTexts.en);
+const settingsText = computed(() => settingsTexts[language.value] || settingsTexts.en);
 const settingsTitle = computed(() => settingsText.value.title);
 const themeGroupTitle = computed(() => settingsText.value.theme);
 const langGroupTitle = computed(() => settingsText.value.lang);
@@ -135,7 +124,6 @@ const lightLabel = computed(() => settingsText.value.light);
 const darkLabel = computed(() => settingsText.value.dark);
 const systemLabel = computed(() => settingsText.value.system);
 const navHome = computed(() => settingsText.value.home);
-const navVote = computed(() => settingsText.value.vote);
 
 // ===== 滚动返回顶部 =====
 const handleScroll = () => {
@@ -148,14 +136,12 @@ const scrollToTop = () => {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
-  window.addEventListener('app-language-change', handleLanguageChange);
   systemDarkMedia.addEventListener('change', handleSystemThemeChange);
   applyTheme();
 });
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
-  window.removeEventListener('app-language-change', handleLanguageChange);
   systemDarkMedia.removeEventListener('change', handleSystemThemeChange);
 });
 </script>
@@ -174,22 +160,13 @@ onUnmounted(() => {
   border: none;
 }
 
-.home-link,
-.vote-link {
+.home-link {
   position: fixed;
   top: 20px;
   z-index: 1000;
   color: #303133;
   text-decoration: none;
   transition: color 0.3s;
-}
-
-.dark .home-link,
-.dark .vote-link {
-  color: #e5e7eb;
-}
-
-.home-link {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -197,14 +174,14 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.vote-link {
-  right: 20px;
+.dark .home-link {
+  color: #e5e7eb;
 }
 
 .theme-toggle {
   position: fixed;
   top: 20px;
-  right: 110px;
+  right: 20px;
   z-index: 1000;
   width: 36px;
   height: 36px;
@@ -280,10 +257,7 @@ onUnmounted(() => {
 
 .router-view {
   width: 100%;
-  height: calc(100vh - var(--header-height));
-  margin-top: calc(var(--header-height) + 20px);
-  margin-top: var(--header-height);
-  margin-top: var(--header-height);
+  /* 页面自身的顶部间距与高度由各页面控制（Home 使用固定视口布局） */
 }
 
 .back-top-btn {
