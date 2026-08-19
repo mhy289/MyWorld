@@ -41,8 +41,16 @@
       </aside>
 
       <main class="content-area">
-        <!-- 首页暂时显示 Hello World -->
-        <div class="hello-world">
+        <!-- 选中模块：渲染对应组件 -->
+        <template v-if="hasSelection">
+          <transition name="module-fade" mode="out-in">
+            <KeepAlive>
+              <component :is="currentComponent" :key="currentComponentKey" />
+            </KeepAlive>
+          </transition>
+        </template>
+        <!-- 未选择模块：首页暂时显示 Hello World -->
+        <div v-else class="hello-world">
           <h1 class="hello-title">Hello World</h1>
           <p class="hello-sub">{{ t.helloSub }}</p>
         </div>
@@ -54,7 +62,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { modules, findCategory, defaultPosition } from '../config/modules';
+import { modules, findCategory } from '../config/modules';
 import { useI18n, language } from '../composables/useI18n';
 import { recordVisit } from '../composables/useVisitor';
 
@@ -81,6 +89,16 @@ const STORAGE_KEY = 'home_module';
 
 const currentCatItems = computed(() => findCategory(currentCat.value)?.items || []);
 
+const currentComponent = computed(() => {
+  const cat = findCategory(currentCat.value);
+  return cat?.items.find((i) => i.key === currentItem.value)?.component;
+});
+
+const currentComponentKey = computed(() => `${currentCat.value}-${currentItem.value}`);
+
+// 是否选中了有效模块（否则显示 Hello World 首页）
+const hasSelection = computed(() => !!currentComponent.value);
+
 // 持久化当前选择（localStorage + URL query）
 const saveState = () => {
   try {
@@ -103,31 +121,16 @@ const handleItemChange = () => {
   saveState();
 };
 
-// 恢复上次位置：URL query > localStorage > 默认第一个
+// 恢复位置：仅 URL query 指定了有效模块时才渲染；否则回到 Hello World 首页
 const resolvePosition = () => {
-  const fallback = defaultPosition();
   const qCat = typeof route.query.cat === 'string' ? route.query.cat : null;
   const qItem = typeof route.query.item === 'string' ? route.query.item : null;
 
-  let saved = null;
-  try {
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-  } catch {
-    saved = null;
+  const cat = qCat ? findCategory(qCat) : null;
+  if (cat && qItem && cat.items.some((i) => i.key === qItem)) {
+    return { cat: qCat, item: qItem };
   }
-
-  const catKey =
-    (qCat && findCategory(qCat)) ? qCat
-    : (saved && findCategory(saved.cat)) ? saved.cat
-    : fallback.cat;
-
-  const cat = findCategory(catKey);
-  const itemKey =
-    (qItem && cat.items.some((i) => i.key === qItem)) ? qItem
-    : (saved && cat.items.some((i) => i.key === saved.item)) ? saved.item
-    : cat.items[0].key;
-
-  return { cat: catKey, item: itemKey };
+  return { cat: '', item: '' };
 };
 
 onMounted(() => {
@@ -266,6 +269,22 @@ onMounted(() => {
 
 .dark .hello-sub {
   color: #8a8d94;
+}
+
+/* 模块切换动画 */
+.module-fade-enter-active,
+.module-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.module-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.module-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 /* 窄屏适配：左侧栏隐藏，子项下拉移到顶部 */
