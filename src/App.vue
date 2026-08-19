@@ -1,9 +1,5 @@
 <template>
   <div class="app-container">
-    <router-link to="/" class="home-link">
-      <el-icon><HomeFilled /></el-icon>
-      <span>{{ navHome }}</span>
-    </router-link>
     <div class="theme-toggle" @click="settingsVisible = true" title="设置">
       <el-icon :size="18"><Setting /></el-icon>
     </div>
@@ -63,7 +59,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { HomeFilled, Top, Sunny, Moon, Monitor, Setting } from '@element-plus/icons-vue';
+import { Top, Sunny, Moon, Monitor, Setting } from '@element-plus/icons-vue';
 import { language, setLanguage } from './composables/useI18n';
 
 const showBackTop = ref(false);
@@ -123,7 +119,6 @@ const langGroupTitle = computed(() => settingsText.value.lang);
 const lightLabel = computed(() => settingsText.value.light);
 const darkLabel = computed(() => settingsText.value.dark);
 const systemLabel = computed(() => settingsText.value.system);
-const navHome = computed(() => settingsText.value.home);
 
 // ===== 滚动返回顶部 =====
 const handleScroll = () => {
@@ -158,24 +153,6 @@ onUnmounted(() => {
   margin: 0;
   padding: 0;
   border: none;
-}
-
-.home-link {
-  position: fixed;
-  top: 20px;
-  z-index: 1000;
-  color: #303133;
-  text-decoration: none;
-  transition: color 0.3s;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dark .home-link {
-  color: #e5e7eb;
 }
 
 .theme-toggle {
