@@ -1,21 +1,17 @@
 <template>
   <div class="devlog-card">
     <h2 class="card-title">{{ t.title }}</h2>
-    <ul class="timeline">
-      <li v-for="(entry, i) in entries" :key="i" class="timeline-item">
-        <span class="timeline-date">{{ entry.date }}</span>
-        <span class="timeline-dot"></span>
-        <div class="timeline-content">
-          <p class="timeline-title">{{ entry.title[lang] }}</p>
-          <p class="timeline-desc">{{ entry.desc[lang] }}</p>
-        </div>
-      </li>
-    </ul>
+    <div class="devlog-list">
+      <article v-for="post in posts" :key="post.key" class="devlog-post">
+        <div class="devlog-md" v-html="post.html"></div>
+      </article>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { useI18n, language } from '../../composables/useI18n';
+import { useI18n } from '../../composables/useI18n';
+import { renderMarkdown } from '../../utils/markdown';
 
 const translations = {
   en: { title: 'Development Journey' },
@@ -28,137 +24,167 @@ const translations = {
 };
 const { t } = useI18n(translations);
 
-const lang = language;
+// 自动加载 src/content/devlog/ 下所有 .md 文件（文件名即日期，倒序 = 新到旧）
+const mdModules = import.meta.glob('../../content/devlog/*.md', {
+  eager: true,
+  query: '?raw',
+  import: 'default'
+});
 
-// 开发历程数据（占位，可替换为真实数据）
-const entries = [
-  {
-    date: '2025-01',
-    title: { en: 'Project Started', zh: '项目启动', fr: 'Projet démarré', es: 'Proyecto iniciado', pt: 'Projeto iniciado', ru: 'Проект начат', ar: 'بدأ المشروع' },
-    desc: { en: 'Initial scaffolding and tech stack setup.', zh: '完成项目脚手架与技术选型。', fr: 'Mise en place du squelette et de la stack.', es: 'Configuración inicial y stack tecnológico.', pt: 'Estrutura inicial e stack tecnológico.', ru: 'Начальная настройка и стек технологий.', ar: 'الإعداد الأولي واختيار التقنيات.' }
-  },
-  {
-    date: '2025-03',
-    title: { en: 'Deployment & Env Config', zh: '部署与环境配置', fr: 'Déploiement et configuration', es: 'Despliegue y configuración', pt: 'Deploy e configuração', ru: 'Развертывание и конфигурация', ar: 'النشر والتكوين' },
-    desc: { en: 'Added environment variables for easy deployment.', zh: '新增环境变量，方便部署。', fr: 'Variables d’environnement pour le déploiement.', es: 'Variables de entorno para el despliegue.', pt: 'Variáveis de ambiente para deploy.', ru: 'Переменные окружения для деплоя.', ar: 'متغيرات البيئة لتسهيل النشر.' }
-  },
-  {
-    date: '2025-06',
-    title: { en: 'Visitor Stats Backend', zh: '访客统计后端接入', fr: 'Statistiques de visite', es: 'Estadísticas de visitas', pt: 'Estatísticas de visitas', ru: 'Статистика посетителей', ar: 'إحصائيات الزوار' },
-    desc: { en: 'Connected visitor reporting to backend API.', zh: '访客数据上报接入后端接口。', fr: 'Rapport des visites via l’API.', es: 'Reporte de visitas vía API.', pt: 'Relatório de visitas via API.', ru: 'Отчет посетителей через API.', ar: 'إبلاغ الزوار عبر الواجهة.' }
-  },
-  {
-    date: '2026-08',
-    title: { en: 'Layout Refactor', zh: '页面框架重构', fr: 'Refonte de la mise en page', es: 'Refactorización del diseño', pt: 'Refatoração do layout', ru: 'Рефакторинг макета', ar: 'إعادة هيكلة التصميم' },
-    desc: { en: 'Rebuilt the page as top + side + content layout.', zh: '重构为顶部 + 左侧 + 中间三区布局。', fr: 'Nouveau layout haut / côté / contenu.', es: 'Nuevo diseño superior / lateral / contenido.', pt: 'Novo layout topo / lateral / conteúdo.', ru: 'Новый макет: верх / бок / контент.', ar: 'تخطيط جديد: أعلى / جانب / محتوى.' }
-  }
-];
+const posts = Object.keys(mdModules)
+  .sort((a, b) => b.localeCompare(a))
+  .map((path) => ({
+    key: path,
+    html: renderMarkdown(mdModules[path] || '')
+  }));
 </script>
 
 <style scoped>
 .devlog-card {
-  max-width: 720px;
+  max-width: 760px;
   padding: 28px 24px;
 }
 
 .card-title {
-  margin: 0 0 24px;
+  margin: 0 0 20px;
   font-size: 20px;
   font-weight: 600;
   color: #303133;
 }
 
-.timeline {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: relative;
+.devlog-post {
+  padding: 20px 0;
 }
 
-/* 左侧时间线竖线 */
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 88px;
-  top: 6px;
-  bottom: 6px;
-  width: 2px;
-  background: #d4dae3;
+.devlog-post + .devlog-post {
+  border-top: 1px solid #e4e7ed;
 }
 
-.timeline-item {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.timeline-date {
-  width: 72px;
-  flex-shrink: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #909399;
-  line-height: 1.6;
-  padding-top: 2px;
-  text-align: right;
-  padding-right: 14px;
-}
-
-.timeline-dot {
-  position: absolute;
-  left: 84px;
-  top: 8px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #409eff;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 2px #409eff;
-}
-
-.timeline-content {
-  flex: 1;
-  min-width: 0;
-  padding-left: 22px;
-}
-
-.timeline-title {
-  margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 500;
+/* ===== md 内容样式（适配亮暗主题） ===== */
+.devlog-md h1 {
+  font-size: 20px;
+  margin: 0 0 12px;
   color: #303133;
 }
 
-.timeline-desc {
-  margin: 0;
-  font-size: 13px;
-  color: #909399;
-  line-height: 1.6;
+.devlog-md h2 {
+  font-size: 16px;
+  margin: 16px 0 8px;
+  color: #303133;
 }
 
-/* 暗色主题 */
+.devlog-md h3 {
+  font-size: 14px;
+  margin: 12px 0 6px;
+  color: #303133;
+}
+
+.devlog-md p {
+  margin: 6px 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #606266;
+}
+
+.devlog-md ul,
+.devlog-md ol {
+  margin: 6px 0;
+  padding-left: 22px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #606266;
+}
+
+.devlog-md li {
+  margin: 3px 0;
+}
+
+.devlog-md code {
+  background: rgba(64, 158, 255, 0.1);
+  color: #409eff;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 13px;
+  font-family: Consolas, Monaco, monospace;
+}
+
+.devlog-md pre {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.devlog-md pre code {
+  background: transparent;
+  color: #303133;
+  padding: 0;
+}
+
+.devlog-md blockquote {
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-left: 3px solid #409eff;
+  background: rgba(64, 158, 255, 0.06);
+  border-radius: 0 6px 6px 0;
+}
+
+.devlog-md blockquote p {
+  margin: 0;
+  color: #606266;
+}
+
+.devlog-md a {
+  color: #409eff;
+  text-decoration: none;
+}
+
+.devlog-md a:hover {
+  text-decoration: underline;
+}
+
+.devlog-md hr {
+  border: none;
+  border-top: 1px solid #e4e7ed;
+  margin: 16px 0;
+}
+
+/* ===== 暗色主题 ===== */
 .dark .card-title {
   color: #e5e7eb;
 }
 
-.dark .timeline::before {
-  background: #3a3c42;
+.dark .devlog-post + .devlog-post {
+  border-top-color: #3a3c42;
 }
 
-.dark .timeline-date {
-  color: #8a8d94;
-}
-
-.dark .timeline-dot {
-  border-color: #1a1b1f;
-}
-
-.dark .timeline-title {
+.dark .devlog-md h1,
+.dark .devlog-md h2,
+.dark .devlog-md h3 {
   color: #e5e7eb;
 }
 
-.dark .timeline-desc {
-  color: #8a8d94;
+.dark .devlog-md p,
+.dark .devlog-md ul,
+.dark .devlog-md ol,
+.dark .devlog-md blockquote p {
+  color: #a8abb2;
+}
+
+.dark .devlog-md pre {
+  background: #26272b;
+}
+
+.dark .devlog-md pre code {
+  color: #d1d5db;
+}
+
+.dark .devlog-md code {
+  background: rgba(64, 158, 255, 0.18);
+}
+
+.dark .devlog-md hr {
+  border-top-color: #3a3c42;
 }
 </style>
