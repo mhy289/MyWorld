@@ -149,18 +149,18 @@ const progress = ref(0);
 
 let progressInterval = null;
 
+// 从数组中随机取一个
+const pickRandom = (arr) => {
+  if (!arr || arr.length === 0) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+};
+
 const fallbackVideos = [
   {
-    title: '示例视频 1',
-    video: 'https://player.bilibili.com/player.html?bvid=BV1xx411c7mD',
-    play: 10000,
-    created: '2024-01-01'
-  },
-  {
-    title: '示例视频 2',
-    video: 'https://player.bilibili.com/player.html?bvid=BV1GJ411x7h7',
-    play: 5000,
-    created: '2024-02-01'
+    title: '好好好',
+    video: 'https://player.bilibili.com/player.html?bvid=BV1Mv4y157k3',
+    play: 1000000000,
+    created: '2026-2-30'
   }
 ];
 
@@ -204,7 +204,7 @@ const stopProgress = () => {
 
 const loadFallback = () => {
   videos.value = fallbackVideos;
-  currentVideo.value = fallbackVideos[0];
+  currentVideo.value = pickRandom(fallbackVideos);
   error.value = false;
   loading.value = false;
 };
@@ -219,7 +219,7 @@ const fetchUserVideos = async () => {
     const list = data.data?.list || data.list || [];
     if (list.length > 0) {
       videos.value = list;
-      currentVideo.value = list[0];
+      currentVideo.value = pickRandom(list);
       ElMessage.success(t.value.loadSuccess);
     } else {
       loadFallback();
@@ -241,7 +241,12 @@ const fetchUserVideos = async () => {
 };
 
 const refreshVideo = () => {
-  fetchUserVideos();
+  // 已有视频列表：直接从列表中随机换一个，不再请求；否则重新拉取
+  if (videos.value.length > 0) {
+    currentVideo.value = pickRandom(videos.value);
+  } else {
+    fetchUserVideos();
+  }
 };
 
 fetchUserVideos();
