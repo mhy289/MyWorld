@@ -65,7 +65,12 @@
           rel="noopener noreferrer"
         >{{ link.label }}</a>
       </div>
-      <span class="footer-icp">{{ icp }}</span>
+      <a
+        class="footer-icp"
+        href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >{{ icp }}</a>
     </footer>
   </div>
 </template>
@@ -97,7 +102,7 @@ const footerLinks = [
   { label: 'Email', url: 'mailto:admin@example.com' },
   { label: 'Blog', url: 'https://example.com' }
 ];
-const icp = '京ICP备00000000号-1';
+const icp = '粤ICP备2026121148号';
 const router = useRouter();
 
 const lang = computed(() => language.value);
@@ -443,6 +448,17 @@ watch(
   text-decoration: underline;
 }
 
+.footer-icp {
+  color: #606266;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-icp:hover {
+  color: #409eff;
+  text-decoration: underline;
+}
+
 .dark .site-footer {
   background: #30323a;
   border-top-color: #3a3c42;
@@ -450,6 +466,14 @@ watch(
 }
 
 .dark .footer-links a {
+  color: #7fb5ff;
+}
+
+.dark .footer-icp {
+  color: #a8abb2;
+}
+
+.dark .footer-icp:hover {
   color: #7fb5ff;
 }
 
