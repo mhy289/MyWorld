@@ -55,7 +55,7 @@
 
     <!-- 底部：关于我的信息、链接、ICP 备案 -->
     <footer class="site-footer">
-      <span class="footer-copy">© {{ year }} MyWorld · {{ t.footerRights }}</span>
+      <span class="footer-copy">© {{ year }} 未来时代科技 · {{ t.footerRights }}</span>
       <div class="footer-links">
         <a
           v-for="link in footerLinks"
@@ -98,9 +98,8 @@ const route = useRoute();
 // ===== 底部页脚配置（按需修改为自己的信息） =====
 const year = new Date().getFullYear();
 const footerLinks = [
-  { label: 'GitHub', url: 'https://github.com/' },
-  { label: 'Email', url: 'mailto:admin@example.com' },
-  { label: 'Blog', url: 'https://example.com' }
+  { label: 'GitHub', url: 'https://github.com/mhy289' },
+  { label: 'Bilibili', url: 'https://space.bilibili.com/165392864' }
 ];
 const icp = '粤ICP备2026121148号';
 const router = useRouter();
