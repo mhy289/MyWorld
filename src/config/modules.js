@@ -7,6 +7,7 @@ import StatsCard from '../components/home/StatsCard.vue';
 import VideoCard from '../components/home/VideoCard.vue';
 import VoteCard from '../components/home/VoteCard.vue';
 import DevLogCard from '../components/home/DevLogCard.vue';
+import PixelArtCard from '../components/home/PixelArtCard.vue';
 
 // 两级导航配置：cat = 顶部分类，item = 左侧子项
 // label 为多语言对象，key 对应 en/zh/fr/es/pt/ru/ar
@@ -25,7 +26,8 @@ export const modules = [
     key: 'tools',
     label: { en: 'Tools', zh: '工具', fr: 'Outils', es: 'Herramientas', pt: 'Ferramentas', ru: 'Инструменты', ar: 'أدوات' },
     items: [
-      { key: 'links', label: { en: 'Quick Links', zh: '常用链接', fr: 'Liens rapides', es: 'Enlaces', pt: 'Links', ru: 'Ссылки', ar: 'روابط' }, component: LinksCard }
+      { key: 'links', label: { en: 'Quick Links', zh: '常用链接', fr: 'Liens rapides', es: 'Enlaces', pt: 'Links', ru: 'Ссылки', ar: 'روابط' }, component: LinksCard },
+      { key: 'pixel', label: { en: 'Pixel Art', zh: '像素图', fr: 'Pixel Art', es: 'Pixel Art', pt: 'Pixel Art', ru: 'Пиксель-арт', ar: 'بكسل آرت' }, component: PixelArtCard }
     ]
   },
   {

@@ -39,6 +39,21 @@ export const reportVisitor = (payload) => {
   return request.post('/visitor/report', payload, { timeout: 5000 });
 };
 
+// 像素图转换：上传图片，后端缩放为 size×size 像素点图，返回 PNG 二进制（写操作，仅本地接口）
+export const convertImage = (file, size) => {
+  if (!LOCAL_API_ENABLED) {
+    return Promise.reject(new Error('本地接口已关闭，无法转换图片'));
+  }
+  const form = new FormData();
+  form.append('file', file);
+  form.append('size', String(size));
+  return request.post('/pixel/convert', form, {
+    timeout: 15000,
+    responseType: 'blob',
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+};
+
 // B站用户视频（后端代理，对外接口与本地返回格式一致）
 export const getUserVideos = (mid) =>
   withFallback(
