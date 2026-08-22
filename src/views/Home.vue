@@ -61,7 +61,16 @@
         target="_blank"
         rel="noopener noreferrer"
       >{{ icp }}</a>
-      <span class="footer-copy">© {{ year }} 未来时代科技 · {{ t.footerRights }}</span>
+      <span class="footer-copy">
+        © {{ year }} 未来时代科技 · {{ t.footerRights }}
+        <span
+          class="backend-status"
+          :class="backendStatus"
+          :title="t.backendOnline"
+        >
+          <i class="dot"></i>{{ t[`backend${backendStatus === 'checking' ? 'Checking' : backendStatus === 'online' ? 'Online' : 'Offline'}`] }}
+        </span>
+      </span>
       <div class="footer-links">
         <a
           v-for="link in footerLinks"
@@ -76,20 +85,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { modules, findCategory } from '../config/modules';
 import { useI18n, language } from '../composables/useI18n';
 import { recordVisit, maybeReportVisitor } from '../composables/useVisitor';
+import { getHealth } from '../api';
 
 const translations = {
-  en: { categoryPlaceholder: 'Select category', itemPlaceholder: 'Select module', homeTitle: 'Home', helloSub: 'Home page under construction', footerRights: 'All rights reserved.' },
-  zh: { categoryPlaceholder: '选择分类', itemPlaceholder: '选择模块', homeTitle: '返回主页', helloSub: '首页建设中', footerRights: '保留所有权利。' },
-  fr: { categoryPlaceholder: 'Choisir une catégorie', itemPlaceholder: 'Choisir un module', homeTitle: 'Accueil', helloSub: "Page d'accueil en construction", footerRights: 'Tous droits réservés.' },
-  es: { categoryPlaceholder: 'Seleccionar categoría', itemPlaceholder: 'Seleccionar módulo', homeTitle: 'Inicio', helloSub: 'Página de inicio en construcción', footerRights: 'Todos los derechos reservados.' },
-  pt: { categoryPlaceholder: 'Selecionar categoria', itemPlaceholder: 'Selecionar módulo', homeTitle: 'Início', helloSub: 'Página inicial em construção', footerRights: 'Todos os direitos reservados.' },
-  ru: { categoryPlaceholder: 'Выберите категорию', itemPlaceholder: 'Выберите модуль', homeTitle: 'Главная', helloSub: 'Страница в разработке', footerRights: 'Все права защищены.' },
-  ar: { categoryPlaceholder: 'اختر الفئة', itemPlaceholder: 'اختر الوحدة', homeTitle: 'الرئيسية', helloSub: 'الصفحة الرئيسية قيد الإنشاء', footerRights: 'جميع الحقوق محفوظة.' }
+  en: { categoryPlaceholder: 'Select category', itemPlaceholder: 'Select module', homeTitle: 'Home', helloSub: 'Home page under construction', footerRights: 'All rights reserved.', backendOnline: 'Backend online', backendOffline: 'Backend offline', backendChecking: 'Checking...' },
+  zh: { categoryPlaceholder: '选择分类', itemPlaceholder: '选择模块', homeTitle: '返回主页', helloSub: '首页建设中', footerRights: '保留所有权利。', backendOnline: '后端在线', backendOffline: '后端离线', backendChecking: '检测中…' },
+  fr: { categoryPlaceholder: 'Choisir une catégorie', itemPlaceholder: 'Choisir un module', homeTitle: 'Accueil', helloSub: "Page d'accueil en construction", footerRights: 'Tous droits réservés.', backendOnline: 'Backend en ligne', backendOffline: 'Backend hors ligne', backendChecking: 'Vérification...' },
+  es: { categoryPlaceholder: 'Seleccionar categoría', itemPlaceholder: 'Seleccionar módulo', homeTitle: 'Inicio', helloSub: 'Página de inicio en construcción', footerRights: 'Todos los derechos reservados.', backendOnline: 'Backend en línea', backendOffline: 'Backend fuera de línea', backendChecking: 'Comprobando...' },
+  pt: { categoryPlaceholder: 'Selecionar categoria', itemPlaceholder: 'Selecionar módulo', homeTitle: 'Início', helloSub: 'Página inicial em construção', footerRights: 'Todos os direitos reservados.', backendOnline: 'Backend online', backendOffline: 'Backend offline', backendChecking: 'Verificando...' },
+  ru: { categoryPlaceholder: 'Выберите категорию', itemPlaceholder: 'Выберите модуль', homeTitle: 'Главная', helloSub: 'Страница в разработке', footerRights: 'Все права защищены.', backendOnline: 'Бэкенд онлайн', backendOffline: 'Бэкенд офлайн', backendChecking: 'Проверка...' },
+  ar: { categoryPlaceholder: 'اختر الفئة', itemPlaceholder: 'اختر الوحدة', homeTitle: 'الرئيسية', helloSub: 'الصفحة الرئيسية قيد الإنشاء', footerRights: 'جميع الحقوق محفوظة.', backendOnline: 'الخادم متصل', backendOffline: 'الخادم غير متصل', backendChecking: 'جاري الفحص...' }
 };
 const { t } = useI18n(translations);
 
@@ -103,6 +113,19 @@ const footerLinks = [
 ];
 const icp = '粤ICP备2026121148号';
 const router = useRouter();
+
+// ===== 后端在线状态（页脚指示器，每 60s 检测一次） =====
+const backendStatus = ref('checking');
+let backendTimer = null;
+
+const checkBackend = async () => {
+  try {
+    await getHealth();
+    backendStatus.value = 'online';
+  } catch (e) {
+    backendStatus.value = 'offline';
+  }
+};
 
 const lang = computed(() => language.value);
 
@@ -186,6 +209,17 @@ onMounted(() => {
   const pos = resolvePosition();
   currentCat.value = pos.cat;
   currentItem.value = pos.item;
+
+  // 检测后端在线状态并定时刷新（供页脚指示器展示）
+  checkBackend();
+  backendTimer = setInterval(checkBackend, 60000);
+});
+
+onUnmounted(() => {
+  if (backendTimer) {
+    clearInterval(backendTimer);
+    backendTimer = null;
+  }
 });
 
 // 路由 query 变化时同步状态（点击左上角 Logo 返回主页等场景）
@@ -436,6 +470,46 @@ watch(
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+/* 后端在线状态指示器：小圆点 + 文案，跟随页脚颜色 */
+.backend-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 10px;
+  font-size: 12px;
+  color: #909399;
+  cursor: default;
+  user-select: none;
+}
+
+.backend-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.backend-status.online .dot {
+  background: #67c23a;
+  box-shadow: 0 0 4px rgba(103, 194, 58, 0.6);
+}
+
+.backend-status.offline .dot {
+  background: #f56c6c;
+  box-shadow: 0 0 4px rgba(245, 108, 108, 0.6);
+}
+
+.backend-status.checking .dot {
+  background: #e6a23c;
+  animation: status-blink 1s ease-in-out infinite;
+}
+
+@keyframes status-blink {
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .footer-links a {

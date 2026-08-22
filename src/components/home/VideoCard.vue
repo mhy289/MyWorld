@@ -83,7 +83,7 @@
 import { ref } from 'vue';
 import { VideoPlay, Refresh, Loading, WarningFilled, View, Link } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import { request } from '../../api/request';
+import { getUserVideos } from '../../api';
 import { useI18n } from '../../composables/useI18n';
 
 const translations = {
@@ -215,7 +215,8 @@ const fetchUserVideos = async () => {
   errorText.value = '';
   startProgress();
   try {
-    const data = await request.get('/bilibili/user/videos', { params: { mid: userId }, timeout: 15000 });
+    // 统一走业务 API 入口：本地接口连不上时自动回退对外公开接口
+    const data = await getUserVideos(userId);
     const list = data.data?.list || data.list || [];
     if (list.length > 0) {
       videos.value = list;
