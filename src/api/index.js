@@ -54,6 +54,22 @@ export const convertImage = (file, size) => {
   });
 };
 
+// 留言板：获取留言列表（楼层正序）
+export const getMessages = () =>
+  withFallback(
+    () => request.get('/messages'),
+    // 对外只读接口返回 { data: messages }，归一化为 messages 本体
+    () => publicRequest.get('/public/messages').then((res) => res?.data ?? res)
+  );
+
+// 留言板：提交留言（写操作，仅本地接口提供，不回退）
+export const submitMessage = (nickname, content) => {
+  if (!LOCAL_API_ENABLED) {
+    return Promise.reject(new Error('本地接口已关闭，无法留言'));
+  }
+  return request.post('/messages', { nickname, content }, { timeout: 5000 });
+};
+
 // B站用户视频（后端代理，对外接口与本地返回格式一致）
 export const getUserVideos = (mid) =>
   withFallback(
