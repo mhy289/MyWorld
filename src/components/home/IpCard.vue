@@ -31,7 +31,6 @@ import { ref, onMounted } from 'vue';
 import { Check, CopyDocument } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { request } from '../../api/request';
-import { reportVisitor } from '../../api';
 import { useI18n, setLanguage } from '../../composables/useI18n';
 
 const translations = {
@@ -97,14 +96,6 @@ const getIP = async () => {
     error.value = true;
   } finally {
     loading.value = false;
-    // 访客上报：ip（失败时为空串兜底）、来源域名、访问时间
-    reportVisitor({
-      ip: ip.value,
-      domain: location.hostname,
-      time: new Date().toISOString()
-    }).catch(() => {
-      // 上报失败不影响页面展示
-    });
   }
 };
 

@@ -80,7 +80,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { modules, findCategory } from '../config/modules';
 import { useI18n, language } from '../composables/useI18n';
-import { recordVisit } from '../composables/useVisitor';
+import { recordVisit, maybeReportVisitor } from '../composables/useVisitor';
 
 const translations = {
   en: { categoryPlaceholder: 'Select category', itemPlaceholder: 'Select module', homeTitle: 'Home', helloSub: 'Home page under construction', footerRights: 'All rights reserved.' },
@@ -178,6 +178,9 @@ onMounted(() => {
   } catch (e) {
     console.warn('记录访问失败:', e);
   }
+
+  // 全局访客上报（带节流：短时间重复访问不重复上报）
+  maybeReportVisitor().catch(() => {});
 
   // 恢复上次选择的模块
   const pos = resolvePosition();
