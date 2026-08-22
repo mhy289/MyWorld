@@ -53,8 +53,14 @@
       </div>
     </main>
 
-    <!-- 底部：关于我的信息、链接、ICP 备案 -->
+    <!-- 底部：备案、版权、其他链接（居中，从上到下） -->
     <footer class="site-footer">
+      <a
+        class="footer-icp"
+        href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >{{ icp }}</a>
       <span class="footer-copy">© {{ year }} 未来时代科技 · {{ t.footerRights }}</span>
       <div class="footer-links">
         <a
@@ -65,12 +71,6 @@
           rel="noopener noreferrer"
         >{{ link.label }}</a>
       </div>
-      <a
-        class="footer-icp"
-        href="https://beian.miit.gov.cn/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >{{ icp }}</a>
     </footer>
   </div>
 </template>
@@ -422,11 +422,10 @@ watch(
 .site-footer {
   grid-area: footer;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 14px 16px;
   font-size: 13px;
   color: #606266;
   background: #dde3ee;
